@@ -1,0 +1,206 @@
+    Finished release [optimized] target(s) in 0.02s
+openssl/sha256   13477416a4f19868bfa0261897fe6f4c25307130551ee84556f618c0ca196185
+
+real	0m0.507s
+user	0m0.432s
+sys	0m0.076s
+b3sum/blake3     90c204e8dbfe46b452b58794e9ce2f5186a56d53e8616b38b28761ea68472e64  /tmp/random_data
+
+real	0m0.043s
+user	0m0.718s
+sys	0m0.093s
+adler32          00000000eac05ea7  /tmp/random_data
+
+real	0m8.661s
+user	0m8.586s
+sys	0m0.075s
+adler32rolling   eac05ea7  /tmp/random_data
+
+real	0m0.399s
+user	0m0.308s
+sys	0m0.091s
+belthash         d8f7257c220abdcaddffa05600577fc83626907172b7c61de3eac2987ca888a1  /tmp/random_data
+
+real	0m7.752s
+user	0m7.673s
+sys	0m0.079s
+blake2b          41293049c17fec067ec313a3e8313968d993b1940af59e8d84914703413064bace52045c11703f09b0e14de9fc692d3cf9441707036157fa797226141ce5e819  /tmp/random_data
+
+real	0m0.737s
+user	0m0.681s
+sys	0m0.056s
+blake2b_simd     41293049c17fec067ec313a3e8313968d993b1940af59e8d84914703413064bace52045c11703f09b0e14de9fc692d3cf9441707036157fa797226141ce5e819  /tmp/random_data
+
+real	0m0.724s
+user	0m0.643s
+sys	0m0.081s
+blake2s          dc746702f6d370460ff9db0159e469bd3984fb4c6ea4a8edc03c4eadc625c4e0  /tmp/random_data
+
+real	0m2.249s
+user	0m2.181s
+sys	0m0.067s
+blake2s_simd     dc746702f6d370460ff9db0159e469bd3984fb4c6ea4a8edc03c4eadc625c4e0  /tmp/random_data
+
+real	0m1.278s
+user	0m1.217s
+sys	0m0.061s
+blake3           90c204e8dbfe46b452b58794e9ce2f5186a56d53e8616b38b28761ea68472e64  /tmp/random_data
+
+real	0m0.272s
+user	0m0.181s
+sys	0m0.091s
+crc32fast        0000000034c3c4b4  /tmp/random_data
+
+real	0m3.586s
+user	0m3.517s
+sys	0m0.069s
+farm_hash        e5588fde4f3d6017  /tmp/random_data
+
+real	0m1.288s
+user	0m1.012s
+sys	0m0.276s
+fnv              7d64645fdae9f215  /tmp/random_data
+
+real	0m0.927s
+user	0m0.843s
+sys	0m0.084s
+fxhasher         377fb59b0471e210  /tmp/random_data
+
+real	0m1.167s
+user	0m1.079s
+sys	0m0.088s
+fxhasher32       00000000edecf85a  /tmp/random_data
+
+real	0m1.164s
+user	0m1.069s
+sys	0m0.094s
+fxhasher64       377fb59b0471e210  /tmp/random_data
+
+real	0m1.164s
+user	0m1.072s
+sys	0m0.092s
+fxhasher_rustc   377fb59b0471e210  /tmp/random_data
+
+real	0m1.158s
+user	0m1.069s
+sys	0m0.089s
+groestl256       7077dab5f7a05b89f723e1be2709c64efec8cee3e6413b867425b2a20c2c121b  /tmp/random_data
+
+real	0m4.702s
+user	0m4.618s
+sys	0m0.084s
+groestl512       e8ccfffb9d2bcd97899bd961d2d0317f3da341fe158bb4e857c4caa6f9872250db0ba4b05bee5fa74c8329f7a9144aab1f8c42dc9a8339cc2cf76091b906a7d7  /tmp/random_data
+
+real	0m6.858s
+user	0m6.775s
+sys	0m0.083s
+md5              fb161328e11dac0c98b551a88bbd25f3  /tmp/random_data
+
+real	0m1.299s
+user	0m1.197s
+sys	0m0.102s
+metrohash128     85faff30488bef93  /tmp/random_data
+
+real	0m1.568s
+user	0m1.487s
+sys	0m0.080s
+metrohash64      678bd87d14457e33  /tmp/random_data
+
+real	0m1.561s
+user	0m1.480s
+sys	0m0.081s
+ripemd160        f1e0bdfbdaddd799e12a58766d7826a16848f43a  /tmp/random_data
+
+real	0m2.597s
+user	0m2.505s
+sys	0m0.092s
+seahash          ab1b9a87b9c8df3e  /tmp/random_data
+
+real	0m7.550s
+user	0m7.457s
+sys	0m0.093s
+sha256           13477416a4f19868bfa0261897fe6f4c25307130551ee84556f618c0ca196185  /tmp/random_data
+
+real	0m0.514s
+user	0m0.423s
+sys	0m0.091s
+sha512           13477416a4f19868bfa0261897fe6f4c25307130551ee84556f618c0ca196185  /tmp/random_data
+
+real	0m0.529s
+user	0m0.445s
+sys	0m0.083s
+sha3_256         f23ca2f855956ca405ff4741677c6b327c8c8ba5487bfb7d846d674ffa2423ed  /tmp/random_data
+
+real	0m2.123s
+user	0m2.043s
+sys	0m0.080s
+sha3_512         fdc88d438351948a93035ddee4c7f8615e8e7c254e8a7f6add31c05800d714a3a1d3d135be763b84f1ac5a1130bc9145bcdbc21a558e1c9a74a74b3505c54ab5  /tmp/random_data
+
+real	0m3.963s
+user	0m3.891s
+sys	0m0.072s
+shabal512        1caf75250f66c004fcaa71925dd12f1a2e8903038b791190731010490116431f0a0f310695a162250fa0791dd2ed9d92118619b55ee71e7e6ccd73afb58a1cab  /tmp/random_data
+
+real	0m1.054s
+user	0m0.968s
+sys	0m0.086s
+siphash          9ba633f85fd66a43  /tmp/random_data
+
+real	0m0.847s
+user	0m0.755s
+sys	0m0.092s
+sm3              904db958e7a260031936483fd9f62cb9cb0ff12d8686a46d13fda601a38e5563  /tmp/random_data
+
+real	0m2.376s
+user	0m2.304s
+sys	0m0.072s
+t1ha             7e099e867c590848  /tmp/random_data
+
+real	0m9.443s
+user	0m9.346s
+sys	0m0.095s
+t1ha2            fe7ef0f9486a3b7c  /tmp/random_data
+
+real	0m0.146s
+user	0m0.072s
+sys	0m0.074s
+tiger            a7bec47eff163c03a75e5d28766055f26a74926e06055713  /tmp/random_data
+
+real	0m1.270s
+user	0m1.194s
+sys	0m0.076s
+tiger2           b251d27a146ba9d73ab2aadcbbba252f93867716cec568dc  /tmp/random_data
+
+real	0m1.271s
+user	0m1.189s
+sys	0m0.082s
+whirlpool        5a5af3aff557da3a3931904b0328b8f6ac4127af131037b920b4d6f4abc70c0bb94d0f88c6b626d435f63048279736cbf1c518e6efaef54a231adf73219fda99  /tmp/random_data
+
+real	0m4.951s
+user	0m4.861s
+sys	0m0.089s
+xxh3             848337db93729c8a  /tmp/random_data
+
+real	0m5.721s
+user	0m5.643s
+sys	0m0.077s
+xxh64            588f99ece5c36289  /tmp/random_data
+
+real	0m3.961s
+user	0m3.880s
+sys	0m0.081s
+xxh64_twohash    588f99ece5c36289  /tmp/random_data
+
+real	0m4.224s
+user	0m4.144s
+sys	0m0.080s
+xxh2_32          9dbe629e  /tmp/random_data
+
+real	0m5.233s
+user	0m5.158s
+sys	0m0.075s
+xxh2_64          1de4fccc97fe56c2  /tmp/random_data
+
+real	0m4.984s
+user	0m4.890s
+sys	0m0.093s
