@@ -12,7 +12,7 @@ use std::io;
 enum Input<'a> {
     Stdin {
         path: &'a str,
-        stdin: io::StdinLock<'a>,
+        stdin: io::Stdin,
     },
     File {
         path: &'a str,
@@ -28,7 +28,6 @@ impl<'a> Input<'a> {
         let input = match path {
             "-" => {
                 let stdin = io::stdin();
-                let stdin = stdin.lock();
                 Self::Stdin { path, stdin }
             },
             path => {
@@ -52,7 +51,8 @@ macro_rules! impl_hash {
                         let mut hasher = investigator::$ident::default();
                         match self {
                             Self::Stdin { path, stdin } => {
-                                investigator::copy_wide(stdin , &mut hasher)?;
+                                let mut stdin = stdin.lock();
+                                investigator::copy_wide(&mut stdin , &mut hasher)?;
                                 let hash = hasher.finish().to_vec();
                                 Ok((hash, path))
                             },
