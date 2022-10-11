@@ -1,174 +1,87 @@
-use std::collections;
+use investigator::Hasher as TRAIT_Hasher;
 use std::env;
 use std::fs;
 use std::io;
-use std::io::BufRead;
-use std::iter;
-use std::path;
-use std::hash::Hash;
-use std::hash::Hasher;
 
-enum Command {
-    Investigate,
-    Compare,
+
+
+// =======================
+// === select_algoritm ===
+// =======================
+
+macro_rules! select_algorithm {
+    ($algorithm:expr, $( ($name:expr, $ident:ident) ),*) => {
+        match $algorithm {
+        $(
+            $name => |reader| investigator::$ident::from_reader(reader).map(|hash| hash.to_vec()),
+        )*
+            _ => panic!("Unknown algorithm: {}", $algorithm),
+        }
+    }
 }
+
+
+
+// ============
+// === main ===
+// ============
 
 fn main() {
-    fn main() -> Result<(), Box<dyn std::error::Error>> {
-        let mut args = env::args().skip(1);
-        let command = args.next();
-        match command.as_ref().map(|s| s.as_str()) {
-            Some("compare") => {
-                let action = args.next().unwrap();
-                let file_1 = args.next().unwrap();
-                let file_2 = args.next().unwrap();
-                compare(&action, &file_1, &file_2)
-            },
-            Some("investigate") => investigate(),
-            _ => panic!("Unknown command"),
-        }
-    }
-
-    main().unwrap();
-}
-
-fn investigate() -> Result<(), Box<dyn std::error::Error>> {
-    for file in walk_files() {
-        let file = file?;
-        let entry = hash_file(file)?;
-        write_hash(entry);
-    }
-    Ok(())
-}
-
-struct File {
-    path: path::PathBuf,
-}
-
-impl File {
-    fn new(path: path::PathBuf) -> Self {
-        Self { path }
-    }
-}
-
-fn walk_files() -> impl Iterator<Item = Result<File, Box<dyn std::error::Error>>> {
-    let mut walker = walkdir::WalkDir::new(".").into_iter();
-
-    iter::from_fn(move || {
-        loop {
-            match walker.next() {
-                Some(Ok(entry)) => {
-                    if entry.file_type().is_file() {
-                        let path = entry.path().to_path_buf();
-                        let file = File::new(path);
-                        return Some(Ok(file));
-                    }
-                }
-                Some(Err(error)) => return Some(Err(error).map_err(Into::into)),
-                None => return None,
-            }
-        }
-    })
-}
-
-struct HashWriter<T>(T)
-where
-    T: Hasher;
-
-impl<T> io::Write for HashWriter<T>
-where
-    T: Hasher,
-{
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.0.write(buf);
-        Ok(buf.len())
-    }
-
-    fn flush(&mut self) -> io::Result<()> {
-        Ok(())
-    }
-}
-
-fn hash_file(file: File) -> io::Result<(File, u64)> {
-    let hasher = rustc_hash::FxHasher::default();
-    let mut hash_writer = HashWriter(hasher);
-    let mut fs_file = fs::File::open(&file.path)?;
-    io::copy(&mut fs_file, &mut hash_writer)?;
-    let hash = hash_writer.0.finish();
-    Ok((file, hash))
-}
-
-fn write_hash((file, hash): (File, u64)) {
-    println!("{hash:016x} {path}", path = file.path.display());
-}
-
-fn hash(mut reader: impl io::Read) -> u64 {
-    let mut hasher = rustc_hash::FxHasher::default();
-    let mut buf = [0; 1024];
-    loop {
-        let n = reader.read(&mut buf).unwrap();
-        if n == 0 {
-            break;
-        }
-        for i in 0..n {
-            buf[i].hash(&mut hasher);
-        }
-    }
-    hasher.finish()
-}
-
-fn compare(action: &str, file_1: &str, file_2: &str) -> Result<(), Box<dyn std::error::Error>> {
-    //let file_1 = read_file(file_1)?;
-    //let file_2 = read_file(file_2)?;
-    let file_1 = read_file(file_1)?.collect::<Result<Vec<_>, _>>()?;
-    let file_2 = read_file(file_2)?.collect::<Result<Vec<_>, _>>()?;
-    let hashes_1 = file_1.iter().map(|s| s.as_str()).map(read_hash).collect::<Result<collections::HashMap<_, _>, _>>()?;
-    let hashes_2 = file_2.iter().map(|s| s.as_str()).map(read_hash).collect::<Result<collections::HashMap<_, _>, _>>()?;
-
-    match action {
-        "AND" => {
-            let keys_1 = hashes_1.keys().cloned().collect::<collections::HashSet<_>>();
-            let keys_2 = hashes_2.keys().cloned().collect::<collections::HashSet<_>>();
-            let keys = keys_1.intersection(&keys_2);
-
-            for key in keys {
-                println!("{key:016x} {path}", path = hashes_1[key]);
-            }
-        },
-        "NAND" => {
-            let keys_1 = hashes_1.keys().cloned().collect::<collections::HashSet<_>>();
-            let keys_2 = hashes_2.keys().cloned().collect::<collections::HashSet<_>>();
-            let keys = keys_1.difference(&keys_2);
-
-            for key in keys {
-                println!("{key:016x} {path}", path = hashes_1[key]);
-            }
-        },
-        _ => panic!("Unknown action"),
-    }
-    Ok(())
-}
-
-fn read_file(path: &str) -> io::Result<io::Lines<io::BufReader<fs::File>>> {
-    let file = fs::File::open(path)?;
-    Ok(io::BufReader::new(file).lines())
-}
-
-fn read_hash(hash_line: &str) -> Result<(u64, &str), Box<dyn std::error::Error>> {
-    let (hash, path) = hash_line.split_at(16);
-    let hash = u64::from_str_radix(hash, 16)?;
-    let path = path.trim_start();
-    Ok((hash, path))
-}
-
-#[cfg(test)]
-mod test {
-    #[test]
-    fn hash_is_deterministic() {
-        for _ in 0..100 {
-            let mut reader = std::io::Cursor::new("Hello, world!");
-            let hash = super::hash(&mut reader);
-            assert_eq!(hash, 0x56_2d_c0_28_4e_81_df_f2);
-        }
-    }
+    let algorithm = env::args().nth(1).unwrap();
+    let path = env::args().nth(2).unwrap();
+    let algorithm = select_algorithm!(
+        algorithm.as_str(),
+        ("adler32", Adler32),
+        ("adler32rolling", Adler32Rolling),
+        ("belthash", BeltHash),
+        ("blake2b", Blake2b),
+        ("blake2b_simd", Blake2bSimd),
+        ("blake2s", Blake2s),
+        ("blake2s_simd", Blake2sSimd),
+        ("blake3", Blake3),
+        ("crc32fast", Crc32Fast),
+        ("farm_hash", FarmHash),
+        ("fnv", Fnv),
+        ("fsb256", Fsb256),
+        ("fsb512", Fsb512),
+        ("fxhasher", FxHasher),
+        ("fxhasher32", FxHasher32),
+        ("fxhasher64", FxHasher64),
+        ("fxhasher_rustc", FxHasherRustc),
+        ("groestl256", Groestl256),
+        ("groestl512", Groestl512),
+        ("md5", Md5),
+        ("metrohash64", MetroHash64),
+        ("metrohash128", MetroHash128),
+        ("ripemd160", Ripemd160),
+        ("seahash", Seahash),
+        ("sha256", Sha256),
+        ("sha512", Sha512),
+        ("sha3_256", Sha3_256),
+        ("sha3_512", Sha3_512),
+        ("shabal512", Shabal512),
+        ("siphash", Siphash),
+        ("sm3", Sm3),
+        ("t1ha", T1ha),
+        ("t1ha2", T1ha2),
+        ("tiger", Tiger),
+        ("tiger2", Tiger2),
+        ("whirlpool", Whirlpool),
+        ("xxh3", Xxh3),
+        ("xxh64", Xxh64),
+        ("xxh64_twohash", Xxh64TwoHash),
+        ("xxh2_32", Xxh2_32),
+        ("xxh2_64", Xxh2_64)
+    );
+    //let algorithm = match algorithm.as_str() {
+    //    "fx_hasher" => |reader| investigator::FxHasher::from_reader(reader).map(|hash| hash.to_vec()),
+    //    "sha256" => |reader| investigator::Sha256::from_reader(reader).map(|hash| hash.to_vec()),
+    //    "blake3" => |reader| investigator::Blake3::from_reader(reader).map(|hash| hash.to_vec()),
+    //    _ => panic!("Unknown algorithm: {}", algorithm),
+    //};
+    let file = fs::File::open(&path).unwrap();
+    let mut reader = io::BufReader::new(file);
+    let hash = algorithm(&mut reader).unwrap();
+    let hash = hex::encode(hash);
+    println!("{hash}  {path}");
 }

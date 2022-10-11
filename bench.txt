@@ -1,0 +1,64 @@
+   Compiling num-traits v0.2.15
+   Compiling t1ha v0.1.0
+   Compiling investigator v0.1.0 (/Users/indiv0/src/investigator)
+    Finished release [optimized] target(s) in 2.32s
+openssl/sha256   6e91d38bde06b2fc961c31f038f826551a44f0212f51fcb0835794874db6ad5d
+
+real	0m6.673s
+user	0m4.064s
+sys	0m1.311s
+b3sum/blake3     fd437a60b466393dfcc6c071de0144c4e0bf9d91af914bc68d95214a4cd4fb43  /tmp/random_data
+
+real	0m6.321s
+user	0m7.238s
+sys	0m3.205s
+adler32rolling   5b21b562  /tmp/random_data
+
+real	0m5.228s
+user	0m3.381s
+sys	0m1.218s
+blake2b_simd     7a7b94ab4321479f346be64e06541c49cf6849fdc3474b5d7619a2f15da7be8dba1626b00ecea5e287099e47cd0da29ee6d5fc66e8566b04c2fc49891f8e2366  /tmp/random_data
+
+real	0m10.696s
+user	0m9.207s
+sys	0m1.262s
+blake3           fd437a60b466393dfcc6c071de0144c4e0bf9d91af914bc68d95214a4cd4fb43  /tmp/random_data
+
+real	0m8.068s
+user	0m6.504s
+sys	0m1.282s
+farm_hash        bfecda565ae0b9ac  /tmp/random_data
+
+real	0m10.398s
+user	0m5.154s
+sys	0m3.543s
+metrohash128     513b1e299fbbc572  /tmp/random_data
+
+real	0m6.900s
+user	0m5.578s
+sys	0m1.122s
+metrohash64      52330b84aead779f  /tmp/random_data
+
+real	0m6.450s
+user	0m5.492s
+sys	0m0.958s
+sha256           6e91d38bde06b2fc961c31f038f826551a44f0212f51fcb0835794874db6ad5d  /tmp/random_data
+
+real	0m5.439s
+user	0m4.530s
+sys	0m0.908s
+sha512           6e91d38bde06b2fc961c31f038f826551a44f0212f51fcb0835794874db6ad5d  /tmp/random_data
+
+real	0m5.427s
+user	0m4.529s
+sys	0m0.897s
+siphash          370738305782b57e  /tmp/random_data
+
+real	0m8.969s
+user	0m7.998s
+sys	0m0.971s
+t1ha2            554c1d2863d1339a  /tmp/random_data
+
+real	0m1.455s
+user	0m0.592s
+sys	0m0.862s
