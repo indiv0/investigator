@@ -1,51 +1,34 @@
-    Finished release [optimized] target(s) in 0.02s
-openssl/sha256   004b4c8eef1632ba9b78a1716d90e7a07e24b06d813b52122644824401ae20c9
+warning: associated function `new` is never used
+   --> src/lib.rs:276:8
+    |
+276 |     fn new(hasher: &'a mut T) -> Self {
+    |        ^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
 
-real	0m4.969s
-user	0m4.236s
-sys	0m0.733s
-b3sum/blake3     d29e42da08acc1ebdf79ae65d0ec22bcbd864daac512b27679c47aa85c3b6e91  /mnt/ramdisk/random_data
+warning: `investigator` (lib) generated 1 warning
+warning: unused macro definition: `select_algorithm`
+  --> src/main.rs:12:14
+   |
+12 | macro_rules! select_algorithm {
+   |              ^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_macros)]` on by default
 
-real	0m0.393s
-user	0m6.943s
-sys	0m0.851s
-adler32rolling   e026b7ce  /mnt/ramdisk/random_data
+warning: variable does not need to be mutable
+  --> src/main.rs:68:21
+   |
+68 |                 let mut reader = io::BufReader::new(file);
+   |                     ----^^^^^^
+   |                     |
+   |                     help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` on by default
 
-real	0m3.968s
-user	0m3.136s
-sys	0m0.832s
-blake2b          0cbeac300f632167516c8e09e4a5f7874a21dc577c7e0a26ecbaddcaace76c47cf2b974d6cf3c4c6c0dbc98c4819cab9300b1121b5e6f0ff2919a94becdd1cf7  /mnt/ramdisk/random_data
+warning: `investigator` (bin "investigator") generated 2 warnings
+    Finished release [optimized] target(s) in 0.04s
+t1ha2            60a7e6de95642b5c  /tmp/random_data
 
-real	0m7.542s
-user	0m6.742s
-sys	0m0.800s
-blake2b_simd     0cbeac300f632167516c8e09e4a5f7874a21dc577c7e0a26ecbaddcaace76c47cf2b974d6cf3c4c6c0dbc98c4819cab9300b1121b5e6f0ff2919a94becdd1cf7  /mnt/ramdisk/random_data
-
-real	0m7.471s
-user	0m6.716s
-sys	0m0.755s
-blake3           d29e42da08acc1ebdf79ae65d0ec22bcbd864daac512b27679c47aa85c3b6e91  /mnt/ramdisk/random_data
-
-real	0m2.590s
-user	0m1.830s
-sys	0m0.759s
-fnv              b9093f536a1234ac  /mnt/ramdisk/random_data
-
-real	0m9.414s
-user	0m8.560s
-sys	0m0.854s
-sha256           004b4c8eef1632ba9b78a1716d90e7a07e24b06d813b52122644824401ae20c9  /mnt/ramdisk/random_data
-
-real	0m5.064s
-user	0m4.296s
-sys	0m0.768s
-sha512           004b4c8eef1632ba9b78a1716d90e7a07e24b06d813b52122644824401ae20c9  /mnt/ramdisk/random_data
-
-real	0m4.834s
-user	0m4.065s
-sys	0m0.769s
-siphash          7f72e7081496b6ed  /mnt/ramdisk/random_data
-
-real	0m8.084s
-user	0m7.308s
-sys	0m0.776s
+real	0m1.565s
+user	0m0.510s
+sys	0m0.715s

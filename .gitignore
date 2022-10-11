@@ -1,4 +1,5 @@
-/target
-/a.txt
-/b.txt
-/benches/random_data
+/target/debug
+/target/release
+/target/.rustc_info.json
+/target/CACHEDIR.TAG
+/target/tmp

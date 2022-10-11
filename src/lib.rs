@@ -1,6 +1,5 @@
 use std::hash::Hasher as TRAIT_Hasher;
 use std::io;
-use std::marker;
 use sha2::Digest as TRAIT_Digest;
 use sha2::digest::ExtendableOutput as TRAIT_ExtendableOutput;
 
@@ -9,6 +8,9 @@ use sha2::digest::ExtendableOutput as TRAIT_ExtendableOutput;
 // =================
 // === Constants ===
 // =================
+
+const KB: usize = 1024;
+const BUF_SIZE: usize = 64 * KB;
 
 const ADLER32_DIGEST_SIZE: usize = 8;
 const ADLER32_ROLLING_DIGEST_SIZE: usize = 4;
@@ -57,16 +59,21 @@ pub trait Hasher<const DIGEST_SIZE: usize>: Default {
     fn update(&mut self, data: &[u8]);
 
     fn finish(self) -> [u8; DIGEST_SIZE];
+}
 
-    fn from_reader<R>(reader: &mut R) -> io::Result<[u8; DIGEST_SIZE]>
-    where R:
-        io::Read,
-    {
-        let mut hasher = Self::default();
-        let mut writer = HashWriter::new(&mut hasher);
-        io::copy(reader, &mut writer)?;
-        let hash = hasher.finish();
-        Ok(hash)
+pub fn copy_wide<const DIGEST_SIZE: usize>(reader: &mut impl io::Read, hasher: &mut impl Hasher<DIGEST_SIZE>) -> io::Result<u64> {
+    let mut buffer = [0u8; BUF_SIZE];
+    let mut total = 0;
+    loop {
+        match reader.read(&mut buffer) {
+            Ok(0) => return Ok(total),
+            Ok(n) => {
+                hasher.update(&buffer[..n]);
+                total += n as u64;
+            }
+            Err(ref e) if e.kind() == io::ErrorKind::Interrupted => continue,
+            Err(e) => return Err(e),
+        }
     }
 }
 
@@ -83,10 +90,12 @@ macro_rules! impl_rust_crypto_hash {
             pub struct $ident($inner);
             
             impl Hasher<$digest_size> for $ident {
+                #[inline]
                 fn update(&mut self, data: &[u8]) {
                     self.0.update(data);
                 }
 
+                #[inline]
                 fn finish(self) -> [u8; $digest_size] {
                     let mut result = [0; $digest_size];
                     result.copy_from_slice(self.0.finalize().as_ref());
@@ -132,10 +141,12 @@ macro_rules! impl_rust_crypto_hash_extendable {
             pub struct $ident($inner);
             
             impl Hasher<$digest_size> for $ident {
+                #[inline]
                 fn update(&mut self, data: &[u8]) {
                     digest::Update::update(&mut self.0, data);
                 }
 
+                #[inline]
                 fn finish(self) -> [u8; $digest_size] {
                     let mut result = [0; $digest_size];
                     self.0.finalize_xof_into(&mut result);
@@ -164,12 +175,14 @@ macro_rules! impl_std_hasher_per_byte {
             pub struct $ident($inner);
             
             impl Hasher<$digest_size> for $ident {
+                #[inline]
                 fn update(&mut self, data: &[u8]) {
                     for byte in data {
                         self.0.write_u8(*byte);
                     }
                 }
 
+                #[inline]
                 fn finish(self) -> [u8; $digest_size] {
                     let digest = self.0.finish();
                     digest.to_be_bytes()
@@ -213,10 +226,12 @@ macro_rules! impl_std_hasher {
             pub struct $ident($inner);
             
             impl Hasher<$digest_size> for $ident {
+                #[inline]
                 fn update(&mut self, data: &[u8]) {
                     self.0.update(data);
                 }
 
+                #[inline]
                 fn finish(mut self) -> [u8; $digest_size] {
                     let digest = self.0.finish();
                     digest.to_be_bytes()
@@ -261,34 +276,6 @@ impl_rolling_adler32_hasher!(
 
 
 
-// ==================
-// === HashWriter ===
-// ==================
-
-struct HashWriter<'a, T, const DIGEST_SIZE: usize>(&'a mut T, marker::PhantomData<[u8; DIGEST_SIZE]>);
-
-impl<'a, T, const DIGEST_SIZE: usize> HashWriter<'a, T, DIGEST_SIZE> {
-    fn new(hasher: &'a mut T) -> Self {
-        Self(hasher, marker::PhantomData)
-    }
-}
-
-impl<'a, T, const DIGEST_SIZE: usize> io::Write for HashWriter<'a, T, DIGEST_SIZE>
-where
-    T: Hasher<DIGEST_SIZE>,
-{
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.0.update(buf);
-        Ok(buf.len())
-    }
-
-    fn flush(&mut self) -> io::Result<()> {
-        Ok(())
-    }
-}
-
-
-
 // ============
 // === Test ===
 // ============
@@ -317,19 +304,24 @@ mod test {
         ($ident:ident, $ty:ident, $expected:expr) => {
             mod $ident {
                 use crate::Hasher as TRAIT_Hasher;
+                use std::fs;
 
                 #[test]
                 fn hash_bytes() {
-                    let bytes = b"Hello, world!";
-                    let hash = crate::$ty::from_reader(&mut &bytes[..]).unwrap();
+                    let mut bytes = &b"Hello, world!"[..];
+                    let mut hasher = crate::$ty::default();
+                    crate::copy_wide(&mut bytes, &mut hasher).unwrap();
+                    let hash = hasher.finish();
                     assert_eq!(hex::encode(hash), $expected);
                 }
 
                 #[test]
                 fn hash_file() {
                     let path = super::create_file_with_hello_world_data();
-                    let mut reader = super::reader_from_path(&path);
-                    let hash = crate::$ty::from_reader(&mut reader).unwrap();
+                    let mut reader = fs::File::open(&path).unwrap();
+                    let mut hasher = crate::$ty::default();
+                    crate::copy_wide(&mut reader, &mut hasher).unwrap();
+                    let hash = hasher.finish();
                     assert_eq!(hex::encode(hash), $expected);
                 }
             }
@@ -391,11 +383,5 @@ mod test {
         }
     
         path.to_path_buf()
-    }
-
-    // === reader_from_path ===
-
-    fn reader_from_path(path: &path::Path) -> fs::File {
-        fs::File::open(path).unwrap()
     }
 }

@@ -10,8 +10,8 @@ nix-shell --packages rustup libiconv cmake openssl
 rustup update nightly
 # Install cargo-watch to automatically rebuild during development.
 cargo install cargo-watch
-# Run benchmarks
-cargo bench
+# Build, test, and run benchmarks
+cargo build && cargo test && cargo bench && cargo build --release
 ```
 
 # Performance
