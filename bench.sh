@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 cargo build --release
 FILE=${1:-benches/random_data}
