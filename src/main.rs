@@ -12,7 +12,7 @@ use std::io;
 enum Input<'a> {
     Stdin {
         path: &'a str,
-        stdin: io::StdinLock<'static>,
+        stdin: io::StdinLock<'a>,
     },
     File {
         path: &'a str,
@@ -27,7 +27,8 @@ impl<'a> Input<'a> {
         let path = path.unwrap_or("-");
         let input = match path {
             "-" => {
-                let stdin = io::stdin().lock();
+                let stdin = io::stdin();
+                let stdin = stdin.lock();
                 Self::Stdin { path, stdin }
             },
             path => {
