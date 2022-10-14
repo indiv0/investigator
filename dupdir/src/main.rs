@@ -2,7 +2,11 @@
 //! ```
 //! clear && cargo check && RUST_BACKTRACE=1 time cargo run --release
 //! cat dupdirs_by_path.txt | awk '{ print length, $0 }' | sort -n -s -r | cut -d" " -f2- > tmp.txt
-//! cd WHEREVER
+//! scp tmp.txt 172.30.194.6:
+//! ssh 172.30.194.6
+//! sudo mv tmp.txt /storage/tmp.txt
+//! sudo su
+//! cd /storage
 //! cat tmp.txt | grep -v "'" | grep -v ' \./lap-ca-nik-01\| \./lab-ca-kvm-02' | cut -d' ' -f2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27 | xargs -I{} du -d 0 "{}" | sort -n
 //! ```
 use std::collections;
