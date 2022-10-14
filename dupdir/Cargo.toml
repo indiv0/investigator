@@ -8,4 +8,4 @@ edition = "2021"
 [dependencies]
 hex = "0.4.3"
 indicatif = { version = "0.17.1" }
-investigator = { path = ".." }
+investigator = { path = "../investigator" }

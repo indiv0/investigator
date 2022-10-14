@@ -1,9 +1,9 @@
 # investigator
-/target/debug
-/target/release
-/target/.rustc_info.json
-/target/CACHEDIR.TAG
-/target/tmp
+/investigator/target/debug
+/investigator/target/release
+/investigator/target/.rustc_info.json
+/investigator/target/CACHEDIR.TAG
+/investigator/target/tmp
 
 # dupdir
 /dupdir/target
