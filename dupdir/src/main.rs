@@ -3,7 +3,7 @@
 //! clear && cargo check && RUST_BACKTRACE=1 time cargo run --release
 //! cat dupdirs_by_path.txt | awk '{ print length, $0 }' | sort -n -s -r | cut -d" " -f2- > tmp.txt
 //! cd WHEREVER
-//! cat tmp.txt | cut -d' ' -f2,3,4,5,6,7,8,9,10,11,12 | xargs -I{} du -d 0 "{}" | sort -n
+//! cat tmp.txt | grep -v "'" | grep -v ' \./lap-ca-nik-01\| \./lab-ca-kvm-02' | cut -d' ' -f2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27 | xargs -I{} du -d 0 "{}" | sort -n
 //! ```
 use std::collections;
 use std::fs;
@@ -257,11 +257,11 @@ fn main() {
     // For each file with hashes, add it to our list of entries.
     let mut record = FileRecord::default();
     let mut entries = Entries::default();
-    println!("Reading entries...");
     let files = ["localhashes.txt", "remotehashes.txt"];
     let mut file_count = 0;
     for file in files {
         // Parse the list of Hash -> File path paths as a list of lines.
+        println!("Reading entries from {}...", file);
         let file = fs::File::open(file).unwrap();
         let file = std::io::BufReader::new(file);
         let lines = file.lines().map(|l| l.unwrap());
@@ -288,7 +288,7 @@ fn main() {
         dir.hash = Some(hash);
     }
 
-    println!("Writing dir hashes...");
+    println!("Writing dir hashes to {}...", "dirhashes.txt");
     let file = fs::File::create("dirhashes.txt").unwrap();
     let mut file = io::LineWriter::new(file);
     for (path, dir) in entries.dir_files.iter().progress() {
@@ -300,7 +300,7 @@ fn main() {
     println!("Found {} directories with duplicate contents.", dup_dirs.len());
 
     // Sort directories by hash.
-    println!("Writing duplicate directories (sorted by hash)...");
+    println!("Writing duplicate directories to {} (sorted by hash)...", "dupdirs_by_hash.txt");
     dup_dirs.sort_by_key(|(_dir, hash)| *hash);
     let file = fs::File::create("dupdirs_by_hash.txt").unwrap();
     let mut file = io::LineWriter::new(file);
@@ -309,7 +309,7 @@ fn main() {
     }
 
     // Sort directories by file path.
-    println!("Writing duplicate directories (sorted by path)...");
+    println!("Writing duplicate directories to {} (sorted by path)...", "dupdirs_by_path.txt");
     dup_dirs.sort_by_key(|(dir, _hash)| *dir);
     let file = fs::File::create("dupdirs_by_path.txt").unwrap();
     let mut file = io::LineWriter::new(file);
