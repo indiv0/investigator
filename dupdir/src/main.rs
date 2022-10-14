@@ -244,6 +244,26 @@ impl Entries {
                     .filter(valid_path)
                     .any(|ancestor| dupes.contains_key(ancestor))
             });
+        let dupes = dupes.collect::<collections::HashMap<_, _>>();
+
+        // Make a list of all directories that *aren't* unique.
+        // We do this again because some directories may have been considered as duplicates of their
+        // ancestors, and thus accidentally included in the list.
+        let lookup = dupes
+            .clone()
+            .into_iter()
+            .fold(collections::HashMap::new(), |mut lookup, (path, hash)| {
+                let dirs = lookup.entry(hash).or_insert_with(Vec::new);
+                dirs.push(path);
+                lookup
+            });
+        let dupes = dupes
+            .into_iter()
+            .filter(|(_path, hash)| {
+                let dirs = lookup.get(hash).expect("Directory should have a hash.");
+                dirs.len() > 1
+            });
+        let dupes = dupes.collect::<collections::HashMap<_, _>>();
 
         let dupes = dupes.into_iter();
         dupes.collect()
