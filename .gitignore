@@ -1,5 +1,10 @@
+# investigator
 /target/debug
 /target/release
 /target/.rustc_info.json
 /target/CACHEDIR.TAG
 /target/tmp
+
+# dupdir
+/dupdir/target
+/dupdir/*.txt

@@ -1,0 +1,11 @@
+[package]
+name = "dupdir"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+hex = "0.4.3"
+indicatif = { version = "0.17.1" }
+investigator = { path = ".." }
