@@ -20,51 +20,7 @@ use std::time;
 use indicatif::ProgressIterator as _;
 use investigator::Hasher as _;
 
-type Error = Box<dyn std::error::Error>;
-
-// ==================
-// === FileRecord ===
-// ==================
-
-#[derive(Clone, Debug, Default)]
-struct FileRecord {
-    hash: String,
-    path: String,
-}
-
-// ==============
-// === Reader ===
-// ==============
-
-#[derive(Clone, Debug)]
-struct Reader<I>
-where
-    I: Iterator<Item = String>,
-{
-    reader: I,
-}
-
-impl<I> Reader<I>
-where
-    I: Iterator<Item = String>,
-{
-    fn new(reader: I) -> Self {
-        Self { reader }
-    }
-
-    fn read_record(&mut self, record: &mut FileRecord) -> Result<bool, Error> {
-        if let Some(line) = self.reader.next() {
-            let (hash, path) = line.split_once("  ").ok_or("invalid")?;
-            assert_eq!(record.hash, record.hash.trim());
-            assert_eq!(record.path, record.path.trim());
-            record.hash.replace_range(.., hash);
-            record.path.replace_range(.., path);
-            return Ok(true);
-        }
-
-        Ok(false)
-    }
-}
+mod reader;
 
 #[derive(Clone, Debug, Default)]
 struct Dir {
@@ -95,7 +51,7 @@ where
 }
 
 impl Entries {
-    fn add_file(&mut self, record: &FileRecord) -> bool {
+    fn add_file(&mut self, record: &reader::FileRecord) -> bool {
         // Determine the path to the parent directory of the file.
         let path = path::Path::new(&record.path);
         let dir = path.parent().unwrap();
@@ -279,7 +235,7 @@ fn hash(bytes: &[u8]) -> String {
 
 fn main() {
     // For each file with hashes, add it to our list of entries.
-    let mut record = FileRecord::default();
+    let mut record = reader::FileRecord::default();
     let mut entries = Entries::default();
     let files = ["localhashes.txt", "remotehashes.txt"];
     let mut file_count = 0;
@@ -291,7 +247,7 @@ fn main() {
         let lines = file.lines().map(|l| l.unwrap());
 
         // For each Hash -> File path pair, insert it into our list of entries.
-        let mut reader = Reader::new(lines);
+        let mut reader = reader::Reader::new(lines);
         while let Ok(true) = reader.read_record(&mut record) {
             let added = entries.add_file(&record);
             if added { file_count += 1; }
