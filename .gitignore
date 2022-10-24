@@ -7,4 +7,5 @@
 
 # dupdir
 /dupdir/target
-/dupdir/*.txt
+/dupdir/data
+/dupdir/data_old

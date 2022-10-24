@@ -1,11 +1,3 @@
-// =============
-// === Error ===
-// =============
-
-type Error = Box<dyn std::error::Error>;
-
-
-
 // ==================
 // === FileRecord ===
 // ==================
@@ -16,38 +8,21 @@ pub struct FileRecord {
     pub path: String,
 }
 
-
-
-// ==============
-// === Reader ===
-// ==============
-
-#[derive(Clone, Debug)]
-pub struct Reader<I>
-where
-    I: Iterator<Item = String>,
-{
-    reader: I,
+impl FileRecord {
+    fn new(hash: String, path: String) -> Self {
+        Self { hash, path }
+    }
 }
 
-impl<I> Reader<I>
-where
-    I: Iterator<Item = String>,
-{
-    pub fn new(reader: I) -> Self {
-        Self { reader }
-    }
 
-    pub fn read_record(&mut self, record: &mut FileRecord) -> Result<bool, Error> {
-        if let Some(line) = self.reader.next() {
-            let (hash, path) = line.split_once("  ").ok_or("invalid")?;
-            assert_eq!(record.hash, record.hash.trim());
-            assert_eq!(record.path, record.path.trim());
-            record.hash.replace_range(.., hash);
-            record.path.replace_range(.., path);
-            return Ok(true);
-        }
 
-        Ok(false)
-    }
+// =================
+// === read_line ===
+// =================
+
+pub fn read_line(input: &str) -> FileRecord {
+    let (hash, path) = input.split_once("  ").expect("Expected double space between hash and path");
+    assert_eq!(hash, hash.trim(), "Extra whitespace in hash");
+    assert_eq!(path, path.trim(), "Extra whitespace in path");
+    FileRecord::new(hash.to_string(), path.to_string())
 }
