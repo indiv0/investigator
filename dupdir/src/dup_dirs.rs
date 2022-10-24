@@ -31,7 +31,6 @@ impl<'a> DupDirs<'a> {
         // Read the mapping of hash -> dir 
         eprintln!("Reading (hash -> dir) mapping");
         let dir_hashes = self.read_dir_hashes();
-        assert_eq!(dir_hashes.len(), 44345);
 
         // Convert the (hash -> dir) mapping to (hash -> dir1, dir2, ...)
         let mut map = collections::HashMap::new();
@@ -43,13 +42,10 @@ impl<'a> DupDirs<'a> {
             });
 
         // Remove any directories with unique hashes.
-        let (unique, dup) = map
+        let (_unique, dup) = map
             .into_iter()
             .progress()
             .partition::<collections::HashMap<_, _>, _>(|(_, ds)| ds.len() == 1);
-        assert_eq!(unique.len(), 2297);
-        assert_eq!(dup.len(), 11481);
-        assert_eq!(dup.values().map(|ds| ds.len()).sum::<usize>() + unique.len(), 44345);
 
         // Among the duplicate directories, sort them by the length of their path, shortest first.
         let dup = dup
@@ -60,8 +56,6 @@ impl<'a> DupDirs<'a> {
                 (h, ds)
             })
             .collect::<collections::HashMap<_, _>>();
-        assert_eq!(dup.len(), 11481);
-        assert_eq!(dup.values().map(|ds| ds.len()).sum::<usize>() + unique.len(), 44345);
        
         
 
@@ -83,17 +77,11 @@ impl<'a> DupDirs<'a> {
                 (h, ds2)
             })
             .collect::<collections::HashMap<_, _>>();
-        assert_eq!(dup.len(), 11481);
-        assert_eq!(dup.values().map(|ds| ds.len()).sum::<usize>(), 37789);
         // If any categories now only contain one dir, remove them.
-        let (unique, dup) = dup
+        let (_unique, dup) = dup
             .into_iter()
             .progress()
             .partition::<collections::HashMap<_, _>, _>(|(_, ds)| ds.len() == 1);
-        assert_eq!(unique.len(), 419);
-        assert_eq!(dup.len(), 11062);
-        assert_eq!(dup.values().map(|ds| ds.len()).sum::<usize>(), 37370);
-        assert_eq!(dup.values().map(|ds| ds.len()).sum::<usize>() + unique.len(), 37789);
 
         // Convert the map<hash, vec<dir>> mapping to vec<(hash, dir)>
         eprintln!("Convert map<hash, vec<dir>> to vec<(hash, dir)>");
@@ -121,7 +109,6 @@ impl<'a> DupDirs<'a> {
             })
             .map(|(h, d)| [h.as_str(), d.as_str()].join(UNIQUE_SEPARATOR))
             .collect::<Vec<_>>();
-        assert_eq!(dup_dirs.len(), 37370);
         dup_dirs
     }
 

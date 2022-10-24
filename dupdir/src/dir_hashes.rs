@@ -36,12 +36,10 @@ impl<'a> DirHashes<'a> {
         // Read the mapping of hash -> file
         eprintln!("Reading (hash -> file) mapping");
         let hashes = self.read_hashes();
-        assert_eq!(hashes.len(), 291785);
 
         // Read the mapping of dir -> file
         eprintln!("Reading (dir -> file) mapping");
         let dir_files = self.read_dir_files();
-        assert_eq!(dir_files.len(), 5242936);
 
         // Convert the mapping of (hash -> file) to (file -> hash)
         eprintln!("Convert (hash -> file) to (file -> hash)");
@@ -50,7 +48,6 @@ impl<'a> DirHashes<'a> {
             .progress()
             .map(|(h, f)| (f, h))
             .collect::<collections::HashMap<_, _>>();
-        assert_eq!(hashes.len(), 291785);
 
         // Convert the mapping of (dir -> file) to (dir -> hash)
         eprintln!("Convert (dir -> file) to (dir -> hash)");
@@ -64,7 +61,6 @@ impl<'a> DirHashes<'a> {
                 (d, h)
             })
             .collect::<Vec<_>>();
-        assert_eq!(dir_hashes.len(), 5242936);
 
         // Pare down the (dir -> hash) mapping to just unique hashes within a directory.
         eprintln!("Convert (dir -> hash) to unique hashes");
@@ -74,8 +70,6 @@ impl<'a> DirHashes<'a> {
             .for_each(|(d, h)| {
                 map.entry(d).or_insert_with(collections::BTreeSet::new).insert(h);
             });
-        assert_eq!(map.len(), 44345);
-        assert_eq!(map.values().map(|v| v.len()).sum::<usize>(), 3406615);
 
         // Convert the (dir -> hash1, hash2, hash3, ...) mapping to (dir -> hash)
         eprintln!("Convert (dir -> hash1, hash2, hash3, ...) to (dir -> hash)");
@@ -94,7 +88,6 @@ impl<'a> DirHashes<'a> {
             .map(|(d, h)| (h, d))
             .collect::<Vec<_>>();
         dir_hashes.sort();
-        assert_eq!(dir_hashes.len(), 44345);
 
         // Turn this into a list of strings.
         eprintln!("Convert (dir -> hash) to list of strings");
@@ -103,7 +96,6 @@ impl<'a> DirHashes<'a> {
             .progress()
             .map(|(h, d)| [h.as_str(), d.as_str()].join("  "))
             .collect::<Vec<_>>();
-        assert_eq!(dir_hashes.len(), 44345);
         dir_hashes
     }
 

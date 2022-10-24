@@ -15,7 +15,7 @@
 //! ```
 //! mkdir data_old
 //! clear && cargo check && RUST_BACKTRACE=1 time cargo run --release old_dup_dirs
-//! cat dupdirs_by_path.txt | cut -d' ' -f2- | xargs -d '\n' du -d0 | sort -n
+//! cat data_old/dupdirs_by_path.txt | cut -d' ' -f2- | xargs -d '\n' du -d0 | sort -n
 //! ```
 //!
 //! New usage:
@@ -32,11 +32,11 @@
 //! sudo su
 //! time ./target/release/dupdir find /Users/indiv0/Desktop/files > data/files.txt && chown indiv0 data/files.txt
 //! time ./target/release/dupdir hash data/files.txt > data/hashes.txt && chown indiv0 data/hashes.txt
-//! time ./target/release/dupdir dir_files data/files.txt > data/dir_files.txt
-//! time ./target/release/dupdir dir_hashes data/dir_files.txt data/hashes.txt > data/dir_hashes.txt
-//! time ./target/release/dupdir dup_dirs data/dir_hashes.txt > data/dup_dirs.txt
-//! cat data/dup_dirs.txt | cut -d';' -f2 | xargs -d '\n' du -d0 | sort -n
+//! time ./target/release/dupdir dir_files data/files.txt > data/dir_files.txt && chown indiv0 data/dir_files.txt
+//! time ./target/release/dupdir dir_hashes data/dir_files.txt data/hashes.txt > data/dir_hashes.txt && chown indiv0 data/dir_hashes.txt
+//! time ./target/release/dupdir dup_dirs data/dir_hashes.txt > data/dup_dirs.txt && chown indiv0 data/dup_dirs.txt
 //! exit
+//! cat data/dup_dirs.txt | cut -d';' -f2 | xargs -d '\n' du -d0 | sort -n
 //! ```
 use std::env;
 use std::path;
