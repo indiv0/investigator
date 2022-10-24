@@ -32,7 +32,6 @@
 //! sudo su
 //! time ./target/release/dupdir find /Users/indiv0/Desktop/files > data/files.txt && chown indiv0 data/files.txt
 //! time ./target/release/dupdir hash data/files.txt > data/hashes.txt && chown indiv0 data/hashes.txt
-//! time ./target/release/dupdir ancestors data/files.txt > data/ancestors.txt
 //! time ./target/release/dupdir dir_files data/files.txt > data/dir_files.txt
 //! time ./target/release/dupdir dir_hashes data/dir_files.txt data/hashes.txt > data/dir_hashes.txt
 //! time ./target/release/dupdir dup_dirs data/dir_hashes.txt > data/dup_dirs.txt
@@ -43,7 +42,6 @@ use std::env;
 use std::path;
 use investigator::Hasher as _;
 
-mod ancestors;
 mod find;
 mod dir_files;
 mod dir_hashes;
@@ -63,7 +61,6 @@ fn main() {
     match command.as_str() {
         "find" => find::main(args),
         "hash" => hash::main(args),
-        "ancestors" => ancestors::main(args),
         "dir_files" => dir_files::main(args),
         "dir_hashes" => dir_hashes::main(args),
         "dup_dirs" => dup_dirs::main(args),
