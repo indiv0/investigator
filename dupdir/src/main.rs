@@ -1,8 +1,8 @@
 //! Usage:
 //! ```
-//! mkdir data_old
+//! mkdir -p target/data
 //! clear && cargo check && RUST_BACKTRACE=1 time cargo run --release old_dup_dirs
-//! cat data_old/dupdirs_by_path.txt | awk '{ print length, $0 }' | sort -n -s -r | cut -d" " -f2- > tmp.txt
+//! cat target/data/dupdirs_by_path.txt | awk '{ print length, $0 }' | sort -n -s -r | cut -d" " -f2- > tmp.txt
 //! scp tmp.txt 172.30.194.6:
 //! ssh 172.30.194.6
 //! sudo mv tmp.txt /storage/tmp.txt
@@ -13,9 +13,9 @@
 //!
 //! Other usage:
 //! ```
-//! mkdir data_old
+//! mkdir -p target/data
 //! clear && cargo check && RUST_BACKTRACE=1 time cargo run --release old_dup_dirs
-//! cat data_old/dupdirs_by_path.txt | cut -d' ' -f2- | xargs -d '\n' du -d0 | sort -n
+//! cat target/data/dupdirs_by_path.txt | cut -d' ' -f2- | xargs -d '\n' du -d0 | sort -n
 //! ```
 //!
 //! New usage:
@@ -28,15 +28,15 @@
 //! find /Users/indiv0/Desktop/files -type f -name '*'$'\r''*' -delete
 //! find /Users/indiv0/Desktop/files -not -perm -u=r -not -perm -u=w -not -perm -u=x -ls
 //! find /Users/indiv0/Desktop/files -not -perm -u=r -not -perm -u=w -not -perm -u=x -delete
-//! mkdir data
+//! mkdir -p target/data
 //! sudo su
-//! time ./target/release/dupdir find /Users/indiv0/Desktop/files > data/files.txt && chown indiv0 data/files.txt
-//! time ./target/release/dupdir hash data/files.txt > data/hashes.txt && chown indiv0 data/hashes.txt
-//! time ./target/release/dupdir dir_files data/files.txt > data/dir_files.txt && chown indiv0 data/dir_files.txt
-//! time ./target/release/dupdir dir_hashes data/dir_files.txt data/hashes.txt > data/dir_hashes.txt && chown indiv0 data/dir_hashes.txt
-//! time ./target/release/dupdir dup_dirs data/dir_hashes.txt > data/dup_dirs.txt && chown indiv0 data/dup_dirs.txt
+//! time ./target/release/dupdir find /Users/indiv0/Desktop/files > target/data/files.txt && chown indiv0 target/data/files.txt
+//! time ./target/release/dupdir hash target/data/files.txt > target/data/hashes.txt && chown indiv0 target/data/hashes.txt
+//! time ./target/release/dupdir dir_files target/data/files.txt > target/data/dir_files.txt && chown indiv0 target/data/dir_files.txt
+//! time ./target/release/dupdir dir_hashes target/data/dir_files.txt target/data/hashes.txt > target/data/dir_hashes.txt && chown indiv0 target/data/dir_hashes.txt
+//! time ./target/release/dupdir dup_dirs target/data/dir_hashes.txt > target/data/dup_dirs.txt && chown indiv0 target/data/dup_dirs.txt
 //! exit
-//! cat data/dup_dirs.txt | cut -d';' -f2 | xargs -d '\n' du -d0 | sort -n
+//! cat target/data/dup_dirs.txt | cut -d';' -f2 | xargs -d '\n' du -d0 | sort -n
 //! ```
 use std::env;
 use std::path;
