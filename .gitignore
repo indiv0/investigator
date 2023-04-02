@@ -4,8 +4,21 @@
 /investigator/target/.rustc_info.json
 /investigator/target/CACHEDIR.TAG
 /investigator/target/tmp
+/investigator/benches/random_data
 
 # dupdir
 /dupdir/target
-/dupdir/data
-/dupdir/data_old
+
+# created by rust-analyzer extension of vscode
+/rust-analyzer-target
+/investigator/rust-analyzer-target
+/dupdir/rust-analyzer-target
+
+# macOS
+/.DS_Store
+
+# nix
+/nix/develop*
+
+# VSCode
+/.vscode
