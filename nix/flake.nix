@@ -35,6 +35,7 @@
 
                 rust
                 cmake # required by xxhash dep
+                openssl
 
                 #awscli2
                 #google-cloud-sdk

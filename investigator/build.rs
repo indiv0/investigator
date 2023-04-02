@@ -21,7 +21,7 @@ fn main() {
 
     // The benchmarks require that we have hash programs installed to compare against.
     let b3sum = cargo().install("b3sum").into();
-    let openssl = command("openssl").arg("-v").into();
+    let openssl = command("openssl").arg("version").into();
     instructions.push(b3sum);
     instructions.push(openssl);
 
