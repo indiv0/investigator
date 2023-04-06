@@ -1,12 +1,19 @@
-use std::{{process}, marker::PhantomData};
-use cargo::*;
-use command::*;
+use std::process;
 use std::env;
 use std::path;
+use std::ops;
+use std::error;
 
+
+
+// =================
+// === Constants ===
+// =================
 
 const CARGO: &str = "cargo";
 const INSTALL: &str = "install";
+const B3SUM: &str = "b3sum";
+const OPENSSL: &str = "openssl";
 
 // === Environment Variable Keys ===
 
@@ -18,30 +25,29 @@ const HOME: &str = "HOME";
 const DOT_CARGO_BIN: &str = ".cargo/bin";
 
 
+
+// ==============
+// === Macros ===
+// ==============
+
 macro_rules! p {
     ($($tokens: tt)*) => {
         println!("cargo:warning={}", format!($($tokens)*))
     }
 }
 
+
+
+// ============
+// === Main ===
+// ============
+
 fn main() {
-    fn main_inner() -> Result<(), env::VarError> {
+    fn main_inner() -> Result<(), Box<dyn error::Error>> {
         p!("Running `build.rs`.");
-        // Create a collection to contain the list of instructions that have to be performed as part of
-        // this build process.
-        let mut instructions: Vec<Instruction> = vec![];
-
         // The benchmarks require that we have hash programs installed to compare against.
-        let b3sum = which("b3sum")?;
-        if b3sum.is_none() {
-            let b3sum = cargo().install("b3sum").into();
-            instructions.push(b3sum);
-        }
-        let openssl = command("openssl").arg("version").into();
-        instructions.push(openssl);
-
-        let instructions = instructions.into_iter();
-        instructions.for_each(|instruction| instruction.execute());
+        let dependencies = [&B3Sum as &dyn Dependency, &OpenSsl];
+        install_dependencies(dependencies)?;
         Ok(())
     }
 
@@ -50,44 +56,103 @@ fn main() {
     }
 }
 
-#[derive(Clone, Debug)]
-enum Instruction {
-    Command(Command<Args>),
-}
-
-impl From<Command<Args>> for Instruction {
-    fn from(command: Command<Args>) -> Self {
-        Instruction::Command(command)
-    }
-}
-
-impl Instruction {
-    fn execute(self) {
-        p!("Executing instruction: {self:?}");
-        match self {
-            Instruction::Command(command) => {
-                let program = command.program();
-                let args = command.args();
-                let args = args.into_iter();
-                let args = args.map(AsRef::as_ref);
-                let args = args.collect::<Vec<_>>();
-                let args = &args[..];
-                execute(program, args);
-            },
+fn install_dependencies(dependencies: impl IntoIterator<Item = &'static dyn Dependency>) -> Result<(), Box<dyn error::Error>> {
+    let dependencies = dependencies.into_iter();
+    let dependencies = dependencies.map(|program| {
+        if !program.installed()? {
+            program.install()?
         }
+        Ok::<_, Box<dyn error::Error>>(())
+    });
+    dependencies.collect::<Result<(), _>>()
+}
+
+
+
+// ==================
+// === Dependency ===
+// ==================
+
+trait Dependency {
+    fn executable_name(&self) -> &'static str;
+
+    fn installed(&self) -> Result<bool, env::VarError> {
+        let executable_name = self.executable_name();
+        let executable_path = which(executable_name)?;
+        let installed = executable_path.is_some();
+        Ok(installed)
+    }
+
+    fn install(&self) -> Result<(), String> {
+        let executable_name = self.executable_name();
+        let error = format!("No installation method provided for executable `{executable_name}`.");
+        Err(error)
     }
 }
 
-fn which(program_name: &str) -> Result<Option<path::PathBuf>, env::VarError> {
+
+
+// =============
+// === b3sum ===
+// =============
+
+struct B3Sum;
+
+
+// === Trait `impl`s ===
+
+impl Dependency for B3Sum {
+    fn executable_name(&self) -> &'static str {
+        B3SUM
+    }
+
+    fn install(&self) -> Result<(), String> {
+        let executable_name = self.executable_name();
+        let command = cargo().install(executable_name);
+        command.run();
+        Ok(())
+    }
+}
+
+
+
+// ===============
+// === OpenSSL ===
+// ===============
+
+struct OpenSsl;
+
+
+// === Trait `impl`s ===
+
+impl Dependency for OpenSsl {
+    fn executable_name(&self) -> &'static str {
+        OPENSSL
+    }
+}
+
+
+
+// =============
+// === Which ===
+// =============
+
+fn which(executable_name: &str) -> Result<Option<path::PathBuf>, env::VarError> {
+    // Build an iterator of paths to search for the executable in.
     let path = env::var(PATH)?;
     let paths = env::split_paths(&path);
     let extra_paths = extra_search_paths()?;
     let paths = paths.chain(extra_paths);
 
-    let paths = paths.map(|path| path.join(program_name));
-    let mut paths = paths.filter(|path| path.is_file());
-    let path = paths.next();
+    let path = which_inner(paths, executable_name);
     Ok(path)
+}
+
+fn which_inner(search_paths: impl IntoIterator<Item = path::PathBuf>, executable_name: &str) -> Option<path::PathBuf> {
+    let search_paths = search_paths.into_iter();
+    let search_paths = search_paths.map(|path| path.join(executable_name));
+    let mut paths = search_paths.filter(|path| path.is_file());
+    paths.next()
 }
 
 fn extra_search_paths() -> Result<impl Iterator<Item = path::PathBuf>, env::VarError> {
@@ -101,116 +166,78 @@ fn extra_search_paths() -> Result<impl Iterator<Item = path::PathBuf>, env::VarE
 
 
 
-mod cargo {
-    use super::*;
+// ===============
+// === Command ===
+// ===============
 
-    pub fn cargo() -> Cargo<Program> {
-        let marker = PhantomData;
-        let command = Cargo { marker };
-        command
-    }
+trait Command {
+    /// Spawns a process from the given program and arguments, then executes it to completion.
+    fn run(self);
+}
 
-    #[derive(Clone, Debug)]
-    pub struct Cargo<K: Kind> {
-        marker: PhantomData<K>,
-    }
-
-    pub struct Program {}
-
-    pub trait Kind {}
-    impl Kind for Program {}
-
-    impl Cargo<Program> {
-        pub fn install(self, program: &'static str) -> Command<Args> {
-            let cargo = command(CARGO);
-            let args = vec![INSTALL, program];
-            let args = args.into_iter();
-            let args = args.map(ToString::to_string);
-            let args = args.collect();
-            cargo.args(args)
-        }
+impl<T> Command for T where T: ops::DerefMut<Target = process::Command> {
+    fn run(mut self) {
+        let command: &mut process::Command = self.deref_mut();
+        let result = command.output();
+        let output = result.expect("Failed to execute command.");
+        let exit_status = output.status;
+        let stdout = output.stdout;
+        let stderr = output.stderr;
+        p!("stdout: {}", String::from_utf8_lossy(&stdout));
+        p!("stderr: {}", String::from_utf8_lossy(&stderr));
+        assert!(exit_status.success(), "Command failed.");
+        p!("Command succeeded.");
     }
 }
 
 
 
-mod command {
-    pub fn command(program: &'static str) -> Command<Program> {
-        let state = State { program };
-        let extra = Program {};
-        let command = Command { state, extra };
-        command
+// =============
+// === Cargo ===
+// =============
+
+struct Cargo(process::Command);
+
+
+// === Main `impl` ===
+
+impl Cargo {
+    fn install(self, program: &'static str) -> CargoInstall {
+        let Self(mut inner) = self;
+        inner.arg(INSTALL);
+        inner.arg(program);
+        CargoInstall(inner)
     }
+}
 
-    #[derive(Clone, Debug)]
-    pub struct Command<K: Kind> {
-        state: State,
-        extra: K,
-    }
-
-    pub struct Program {}
-    #[derive(Clone, Debug)]
-    pub struct Args {
-        args: Vec<String>,
-    }
-
-    pub trait Kind {}
-    impl Kind for Program {}
-    impl Kind for Args {}
-
-    #[derive(Clone, Debug)]
-    struct State {
-        program: &'static str,
-    }
-
-    impl Command<Program> {
-        pub fn arg<S>(self, arg: S) -> Command<Args>
-        where
-            S: ToString,
-        {
-            let state = self.state;
-            let arg = arg.to_string();
-            let args = vec![arg];
-            let extra = Args { args };
-            let command = Command { state, extra };
-            command
-        }
-
-        pub fn args(self, args: Vec<String>) -> Command<Args> {
-            let state = self.state;
-            let extra = Args { args };
-            let command = Command { state, extra };
-            command
-        }
-    }
-
-    impl Command<Args> {
-        pub fn program(&self) -> &'static str {
-            let state = &self.state;
-            let program = state.program;
-            program
-        }
-
-        pub fn args(&self) -> &[String] {
-            let args = &self.extra.args;
-            &args[..]
-        }
-    }
+fn cargo() -> Cargo {
+    let command = process::Command::new(CARGO);
+    Cargo(command)
 }
 
 
 
-/// Spawns a process from the given program and arguments, then executes it to completion.
-fn execute(program: &str, args: &[&str]) {
-    let mut command = process::Command::new(program);
-    let command = command.args(args);
-    let result = command.output();
-    let output = result.expect("Failed to execute command.");
-    let exit_status = output.status;
-    let stdout = output.stdout;
-    let stderr = output.stderr;
-    p!("stdout: {}", String::from_utf8_lossy(&stdout));
-    p!("stderr: {}", String::from_utf8_lossy(&stderr));
-    assert!(exit_status.success(), "Command failed.");
-    p!("Command succeeded.");
+// ====================
+// === CargoInstall ===
+// ====================
+
+struct CargoInstall(process::Command);
+
+
+// === Trait `impl`s ===
+
+impl ops::Deref for CargoInstall {
+    type Target = process::Command;
+
+    fn deref(&self) -> &Self::Target {
+        let Self(inner) = self;
+        inner
+    }
+}
+
+impl ops::DerefMut for CargoInstall {
+    fn deref_mut(&mut self) -> &mut process::Command {
+        let Self(inner) = self;
+        inner
+    }
 }
