@@ -3,6 +3,4 @@
 /Users/indiv0/src/investigator/dupdir/src/dir_hashes.rs
 /Users/indiv0/src/investigator/dupdir/src/main.rs
 /Users/indiv0/src/investigator/dupdir/src/find.rs
-/Users/indiv0/src/investigator/dupdir/src/old_dup_dirs.rs
-/Users/indiv0/src/investigator/dupdir/src/reader.rs
 /Users/indiv0/src/investigator/dupdir/src/hash.rs
