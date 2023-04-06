@@ -1,8 +1,5 @@
 use indicatif::ProgressIterator as _;
 use std::collections;
-use std::fs;
-use std::io;
-use std::io::BufRead as _;
 use std::path;
 use std::str;
 
@@ -10,20 +7,19 @@ use std::str;
 // === DirFiles ===
 // ================
 
-#[derive(Clone, Debug, Default)]
+#[derive(Debug)]
 pub struct DirFiles<'a> {
-    files: &'a str,
+    files: &'a crate::Lines,
 }
 
 impl<'a> DirFiles<'a> {
-    pub fn files(mut self, files: &'a str) -> Self {
-        self.files = files;
-        self
+    pub fn new(files: &'a crate::Lines) -> Self {
+        Self { files }
     }
 
     pub fn dir_files(&self) -> Vec<String> {
         // Read the list of files
-        let files = self.read_files();
+        let crate::Lines(files) = self.files;
 
         // Get a mapping of each ancestor -> file
         let ancestors_and_file = files_to_ancestors_and_file(files);
@@ -54,18 +50,9 @@ impl<'a> DirFiles<'a> {
         let dirs_and_files = dirs_and_files.collect::<Vec<_>>();
         dirs_and_files
     }
-
-    fn read_files(&self) -> Vec<String> {
-        let file = fs::File::open(self.files).expect("Failed to open file");
-        let file = io::BufReader::new(file);
-        let lines = file.lines().map(|l| l.expect("Failed to read line"));
-        let files = lines.inspect(|l| crate::assert_path_rules(&l));
-        let files = files.collect();
-        files
-    }
 }
 
-fn files_to_ancestors_and_file(files: Vec<String>) -> Vec<(String, String)> {
+fn files_to_ancestors_and_file(files: &[String]) -> Vec<(String, String)> {
     let files = files.iter().progress();
     let dirs_and_files = files.flat_map(|f| {
         // For each file, get it's parent dir
@@ -108,7 +95,7 @@ fn assert_dir_rules(p: &path::Path) {
 // === Main ===
 // ============
 
-pub fn main(path: &str) -> Vec<String> {
-    let dir_files = DirFiles::default().files(&path);
+pub fn main(files: &crate::Lines) -> Vec<String> {
+    let dir_files = DirFiles::new(files);
     dir_files.dir_files()
 }

@@ -118,7 +118,8 @@ fn main() {
             }
             "dir_files" => {
                 let path = path_arg(&mut args)?;
-                dir_files::main(&path)
+                let files = Lines::from_path(path)?;
+                dir_files::main(&files)
             }
             "dir_hashes" => {
                 let files = path_arg(&mut args)?;
@@ -239,8 +240,10 @@ mod tests {
     // ================
 
     #[test]
-    fn test_dir_files() {
-        let _dir_files = dir_files::main(OUT_FILES);
+    fn test_dir_files() -> Result<(), io::Error> {
+        let files = crate::Lines::from_path(OUT_FILES)?;
+        let _dir_files = dir_files::main(&files);
+        Ok(())
     }
 
     // =================
@@ -252,9 +255,9 @@ mod tests {
         let _dir_hashes = dir_hashes::main(OUT_DIR_FILES, OUT_HASHES);
     }
 
-    // ===========
-    // === All ===
-    // ===========
+    // ===============
+    // === DupDirs ===
+    // ===============
 
     #[test]
     fn test_dup_dirs() {
@@ -269,27 +272,44 @@ mod tests {
     fn find() {
         let src = src_dir();
         let args = format!("find {src}");
-        cargo_run_command(&args, OUT_FILES);
+        cargo_run_command(&args, Some(OUT_FILES));
     }
 
     fn hash() {
         let args = format!("hash {OUT_FILES}");
-        cargo_run_command(&args, OUT_HASHES);
+        cargo_run_command(&args, Some(OUT_HASHES));
     }
 
     fn dir_files() {
         let args = format!("dir_files {OUT_FILES}");
-        cargo_run_command(&args, OUT_DIR_FILES);
+        cargo_run_command(&args, Some(OUT_DIR_FILES));
     }
 
     fn dir_hashes() {
         let args = format!("dir_hashes {OUT_DIR_FILES} {OUT_HASHES}");
-        cargo_run_command(&args, OUT_DIR_HASHES);
+        cargo_run_command(&args, Some(OUT_DIR_HASHES));
     }
 
     fn dup_dirs() {
         let args = format!("dup_dirs {OUT_DIR_HASHES}");
-        cargo_run_command(&args, OUT_DUP_DIRS);
+        cargo_run_command(&args, Some(OUT_DUP_DIRS));
+    }
+
+    // ===========
+    // === All ===
+    // ===========
+
+    #[test]
+    fn test_all() {
+        create_dir("out").unwrap();
+        all();
+    }
+
+    fn all() {
+        let src = src_dir();
+        let args = format!("all {src} {OUT_FILES}");
+        // FIXME [NP]: output
+        cargo_run_command(&args, None);
     }
 
     fn create_dir(path: &str) -> io::Result<()> {
@@ -308,7 +328,7 @@ mod tests {
         src.to_string()
     }
 
-    fn cargo_run_command(args: &str, out_file: &str) {
+    fn cargo_run_command(args: &str, out_file: Option<&str>) {
         let args = args.split(" ");
         let output = process::Command::new("cargo")
             .arg("run")
@@ -321,7 +341,9 @@ mod tests {
         println!("stdout: {}", stdout);
         let status = output.status;
         assert!(status.success(), "Failed to run cargo: {:?}", status);
-        write_to_file(out_file, &stdout);
+        if let Some(out_file) = out_file {
+            write_to_file(out_file, &stdout);
+        }
     }
 
     fn write_to_file(path: &str, contents: &str) {
