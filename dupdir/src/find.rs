@@ -1,7 +1,6 @@
 use indicatif::ProgressIterator as _;
 use std::env;
 use std::io;
-use std::io::Write as _;
 #[cfg(test)]
 use std::process;
 use std::str;
@@ -119,12 +118,15 @@ pub fn main(mut args: env::Args) {
 
     let stdout = io::stdout();
     let mut handle = stdout.lock();
+    write_output(&mut handle, paths).expect("Failed to write file path.");
+}
+
+fn write_output(writer: &mut dyn io::Write, paths: Vec<String>) ->  Result<(), io::Error> {
+    let paths = paths.iter();
+    let paths = paths.progress();
+    let paths = paths.map(|path| write!(writer, "{path}\n"));
+    let paths = paths.collect::<Result<(), _>>();
     paths
-        .iter()
-        .progress()
-        .for_each(|p| {
-            write!(handle, "{p}\n").expect("Failed to write to stdout");
-        })
 }
 
 
@@ -136,21 +138,13 @@ pub fn main(mut args: env::Args) {
 #[cfg(test)]
 mod tests {
     use crate::find;
-    use indicatif::ProgressIterator as _;
 
     #[test]
-    #[ignore]
     fn test_unix_and_walkdir_are_identical() {
         const PATH: &str = "/Users/indiv0/Desktop/files";
         let finder = find::Finder::default().path(PATH);
         let unix = finder.clone().strategy(find::Strategy::Unix).find();
         let walk_dir = finder.strategy(find::Strategy::WalkDir).find();
-
-        assert_eq!(unix.len(), walk_dir.len());
-        let iter = unix.iter().zip(walk_dir.iter()).progress();
-        for (unix, walk_dir) in iter {
-            assert_eq!(unix, walk_dir);
-        }
         assert_eq!(unix, walk_dir);
     }
 }

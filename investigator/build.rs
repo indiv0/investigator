@@ -1,10 +1,21 @@
-use std::{{process, process::Stdio}, error::Error, collections::{HashMap, VecDeque}, marker::PhantomData, io, process::Output};
+use std::{{process}, marker::PhantomData};
 use cargo::*;
 use command::*;
+use std::env;
+use std::path;
 
 
 const CARGO: &str = "cargo";
 const INSTALL: &str = "install";
+
+// === Environment Variable Keys ===
+
+const PATH: &str = "PATH";
+const HOME: &str = "HOME";
+
+// === Paths ===
+
+const DOT_CARGO_BIN: &str = ".cargo/bin";
 
 
 macro_rules! p {
@@ -14,19 +25,29 @@ macro_rules! p {
 }
 
 fn main() {
-    p!("Running `build.rs`.");
-    // Create a collection to contain the list of instructions that have to be performed as part of
-    // this build process.
-    let mut instructions: Vec<Instruction> = vec![];
+    fn main_inner() -> Result<(), env::VarError> {
+        p!("Running `build.rs`.");
+        // Create a collection to contain the list of instructions that have to be performed as part of
+        // this build process.
+        let mut instructions: Vec<Instruction> = vec![];
 
-    // The benchmarks require that we have hash programs installed to compare against.
-    let b3sum = cargo().install("b3sum").into();
-    let openssl = command("openssl").arg("version").into();
-    instructions.push(b3sum);
-    instructions.push(openssl);
+        // The benchmarks require that we have hash programs installed to compare against.
+        let b3sum = which("b3sum")?;
+        if b3sum.is_none() {
+            let b3sum = cargo().install("b3sum").into();
+            instructions.push(b3sum);
+        }
+        let openssl = command("openssl").arg("version").into();
+        instructions.push(openssl);
 
-    let instructions = instructions.into_iter();
-    instructions.for_each(|instruction| instruction.execute());
+        let instructions = instructions.into_iter();
+        instructions.for_each(|instruction| instruction.execute());
+        Ok(())
+    }
+
+    if let Err(e) = main_inner() {
+        eprintln!("Error: {e}");
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -55,6 +76,27 @@ impl Instruction {
             },
         }
     }
+}
+
+fn which(program_name: &str) -> Result<Option<path::PathBuf>, env::VarError> {
+    let path = env::var(PATH)?;
+    let paths = env::split_paths(&path);
+    let extra_paths = extra_search_paths()?;
+    let paths = paths.chain(extra_paths);
+
+    let paths = paths.map(|path| path.join(program_name));
+    let mut paths = paths.filter(|path| path.is_file());
+    let path = paths.next();
+    Ok(path)
+}
+
+fn extra_search_paths() -> Result<impl Iterator<Item = path::PathBuf>, env::VarError> {
+    let home = env::var(HOME)?;
+    let home = path::PathBuf::from(home);
+    let bin = home.join(DOT_CARGO_BIN);
+
+    let paths = [bin].into_iter();
+    Ok(paths)
 }
 
 
@@ -93,8 +135,6 @@ mod cargo {
 
 
 mod command {
-    use super::*;
-
     pub fn command(program: &'static str) -> Command<Program> {
         let state = State { program };
         let extra = Program {};
