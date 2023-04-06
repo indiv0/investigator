@@ -102,7 +102,8 @@ impl<'a> Finder<'a> {
 // === Main ===
 // ============
 
-pub fn main(path: &str) -> Vec<String> {
+pub fn main(path: &str) -> crate::Lines {
     let finder = Finder::default().path(&path).strategy(Strategy::WalkDir);
-    finder.find()
+    let paths = finder.find();
+    crate::Lines(paths)
 }

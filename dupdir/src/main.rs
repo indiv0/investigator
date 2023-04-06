@@ -44,6 +44,8 @@ use std::env;
 use std::error;
 use std::io;
 use std::path;
+use std::fs;
+use std::io::BufRead as _;
 
 mod dir_files;
 mod dir_hashes;
@@ -51,47 +53,92 @@ mod dup_dirs;
 mod find;
 mod hash;
 
+// =================
+// === Constants ===
+// =================
+
 const UNIQUE_SEPARATOR: &str = "    ";
+
+// =============
+// === Lines ===
+// =============
+
+#[derive(Debug, Default)]
+pub struct Lines(pub Vec<String>);
+
+// === Main `impl` ===
+
+impl Lines {
+    fn from_path(path: impl AsRef<path::Path>) -> Result<Self, io::Error> {
+        let path = path.as_ref();
+        Self::try_from(path)
+    }
+}
+
+// === Trait `impls` ===
+
+impl TryFrom<&path::Path> for Lines {
+    type Error = io::Error;
+
+    fn try_from(path: &path::Path) -> Result<Self, Self::Error> {
+        let file = fs::File::open(path)?;
+        let file = io::BufReader::new(file);
+        let lines = file.lines().map(|line| {
+            line.map(|line| {
+                assert_path_rules(&line);
+                line
+            })
+        });
+        let paths = lines.collect::<Result<Vec<_>, _>>()?;
+        let paths = Self(paths);
+        Ok(paths)
+    }
+}
+
+// ============
+// === Main ===
+// ============
 
 fn main() {
     fn main_inner() -> Result<(), Box<dyn error::Error>> {
         let mut args = env::args();
         let _command = args.next();
         let command = args.next().expect("Command required");
-        match command.as_str() {
+        let strings = match command.as_str() {
             "find" => {
                 let path = path_arg(&mut args)?;
-                let paths = find::main(&path);
-                let mut writer = stdout_writer();
-                write_output(&mut writer, paths)?;
+                let found_paths = find::main(&path);
+                let Lines(found_paths) = found_paths;
+                found_paths
             }
             "hash" => {
                 let path = path_arg(&mut args)?;
-                let paths = hash::main(&path);
-                let mut writer = stdout_writer();
-                write_output(&mut writer, paths)?;
+                let paths = Lines::from_path(path)?;
+                hash::main(paths)
             }
             "dir_files" => {
                 let path = path_arg(&mut args)?;
-                let dir_files = dir_files::main(&path);
-                let mut writer = stdout_writer();
-                write_output(&mut writer, dir_files)?;
+                dir_files::main(&path)
             }
             "dir_hashes" => {
                 let files = path_arg(&mut args)?;
                 let hashes = path_arg(&mut args)?;
-                let dir_hashes = dir_hashes::main(&files, &hashes);
-                let mut writer = stdout_writer();
-                write_output(&mut writer, dir_hashes)?;
+                dir_hashes::main(&files, &hashes)
             }
             "dup_dirs" => {
                 let dir_hashes = path_arg(&mut args)?;
-                let dup_dirs = dup_dirs::main(&dir_hashes);
-                let mut writer = stdout_writer();
-                write_output(&mut writer, dup_dirs)?;
+                dup_dirs::main(&dir_hashes)
+            }
+            "all" => {
+                let search_path = path_arg(&mut args)?;
+                let found_paths = find::main(&search_path);
+                hash::main(found_paths)
             }
             other => panic!("Unknown command: {other:?}"),
-        }
+        };
+        // Write the resulting strings to stdout.
+        let mut writer = stdout_writer();
+        write_output(&mut writer, strings)?;
         Ok(())
     }
 
@@ -181,11 +228,10 @@ mod tests {
     // ============
 
     #[test]
-    #[ignore]
-    fn test_hash() {
-        const PATH: &str = "./data/files.txt";
-        let hasher = hash::Hasher::default().path(PATH);
-        let _hashes = hasher.hash();
+    fn test_hash() -> Result<(), io::Error> {
+        let paths = crate::Lines::from_path(OUT_FILES)?;
+        let _hashes = hash::main(paths);
+        Ok(())
     }
 
     // ================
@@ -193,11 +239,8 @@ mod tests {
     // ================
 
     #[test]
-    #[ignore]
     fn test_dir_files() {
-        const PATH: &str = "./data/files.txt";
-        let dir_files = dir_files::DirFiles::default().files(PATH);
-        let _dir_files = dir_files.dir_files();
+        let _dir_files = dir_files::main(OUT_FILES);
     }
 
     // =================
@@ -205,12 +248,8 @@ mod tests {
     // =================
 
     #[test]
-    #[ignore]
     fn test_dir_hashes() {
-        const FILES: &str = "./data/dir_files.txt";
-        const HASHES: &str = "./data/hashes.txt";
-        let dir_hashes = dir_hashes::DirHashes::default().files(FILES).hashes(HASHES);
-        let _dir_hashes = dir_hashes.dir_hashes();
+        let _dir_hashes = dir_hashes::main(OUT_DIR_FILES, OUT_HASHES);
     }
 
     // ===========
