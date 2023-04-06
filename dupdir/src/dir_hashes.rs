@@ -1,13 +1,11 @@
-use indicatif::ProgressIterator as _;
 use indicatif::ParallelProgressIterator as _;
+use indicatif::ProgressIterator as _;
 use rayon::prelude::*;
 use std::collections;
 use std::fs;
 use std::io;
 use std::io::BufRead as _;
 use std::str;
-
-
 
 // =================
 // === DirHashes ===
@@ -63,28 +61,23 @@ impl<'a> DirHashes<'a> {
         // Pare down the (dir -> hash) mapping to just unique hashes within a directory.
         eprintln!("Convert (dir -> hash) to unique hashes");
         let mut map = collections::BTreeMap::new();
-        dir_hashes
-            .into_iter()
-            .for_each(|(d, h)| {
-                map.entry(d).or_insert_with(collections::BTreeSet::new).insert(h);
-            });
+        dir_hashes.into_iter().for_each(|(d, h)| {
+            map.entry(d)
+                .or_insert_with(collections::BTreeSet::new)
+                .insert(h);
+        });
 
         // Convert the (dir -> hash1, hash2, hash3, ...) mapping to (dir -> hash)
         eprintln!("Convert (dir -> hash1, hash2, hash3, ...) to (dir -> hash)");
-        let dir_hashes = map
-            .into_iter()
-            .progress()
-            .map(|(d, hs)| {
-                let hs = hs.into_iter().collect::<String>();
-                let h = crate::hash_bytes(hs.as_bytes());
-                (d, h)
-            });
+        let dir_hashes = map.into_iter().progress().map(|(d, hs)| {
+            let hs = hs.into_iter().collect::<String>();
+            let h = crate::hash_bytes(hs.as_bytes());
+            (d, h)
+        });
 
         // Sort the (dir -> hash) mapping by hash
         eprintln!("Sort (dir -> hash) by hash");
-        let mut dir_hashes = dir_hashes
-            .map(|(d, h)| (h, d))
-            .collect::<Vec<_>>();
+        let mut dir_hashes = dir_hashes.map(|(d, h)| (h, d)).collect::<Vec<_>>();
         dir_hashes.sort();
 
         // Turn this into a list of strings.
@@ -116,7 +109,9 @@ impl<'a> DirHashes<'a> {
         let file = io::BufReader::new(file);
         let lines = file.lines().map(|l| l.expect("Failed to read line"));
         let dir_files = lines.map(|l| {
-            let (dir, file) = l.split_once(crate::UNIQUE_SEPARATOR).expect("Failed to split line");
+            let (dir, file) = l
+                .split_once(crate::UNIQUE_SEPARATOR)
+                .expect("Failed to split line");
             crate::assert_path_rules(dir);
             crate::assert_path_rules(file);
             (dir.to_string(), file.to_string())
@@ -126,15 +121,11 @@ impl<'a> DirHashes<'a> {
     }
 }
 
-
-
 // ============
 // === Main ===
 // ============
 
 pub fn main(files: &str, hashes: &str) -> Vec<String> {
-    let dir_hashes = DirHashes::default()
-        .files(&files)
-        .hashes(&hashes);
+    let dir_hashes = DirHashes::default().files(&files).hashes(&hashes);
     dir_hashes.dir_hashes()
 }

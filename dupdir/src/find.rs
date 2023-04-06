@@ -2,8 +2,6 @@
 use std::process;
 use std::str;
 
-
-
 // ================
 // === Strategy ===
 // ================
@@ -15,8 +13,6 @@ pub enum Strategy {
     #[default]
     WalkDir,
 }
-
-
 
 // ==============
 // === Finder ===
@@ -93,21 +89,20 @@ impl<'a> Finder<'a> {
             crate::assert_path_rules(path);
             path.trim().to_string()
         });
-        let paths = paths.map(|p| { assert!(!p.is_empty(), "Path is empty"); p });
+        let paths = paths.map(|p| {
+            assert!(!p.is_empty(), "Path is empty");
+            p
+        });
         let paths = paths.collect::<Vec<String>>();
         paths
     }
 }
-
-
 
 // ============
 // === Main ===
 // ============
 
 pub fn main(path: &str) -> Vec<String> {
-    let finder = Finder::default()
-        .path(&path)
-        .strategy(Strategy::WalkDir);
+    let finder = Finder::default().path(&path).strategy(Strategy::WalkDir);
     finder.find()
 }

@@ -8,8 +8,6 @@ use std::str;
 
 const UNIQUE_SEPARATOR: &str = ";";
 
-
-
 // ===============
 // === DupDirs ===
 // ===============
@@ -26,18 +24,15 @@ impl<'a> DupDirs<'a> {
     }
 
     pub fn dup_dirs(&self) -> Vec<String> {
-        // Read the mapping of hash -> dir 
+        // Read the mapping of hash -> dir
         eprintln!("Reading (hash -> dir) mapping");
         let dir_hashes = self.read_dir_hashes();
 
         // Convert the (hash -> dir) mapping to (hash -> dir1, dir2, ...)
         let mut map = collections::HashMap::new();
-        dir_hashes
-            .into_iter()
-            .progress()
-            .for_each(|(h, d)| {
-                map.entry(h).or_insert_with(Vec::new).push(d);
-            });
+        dir_hashes.into_iter().progress().for_each(|(h, d)| {
+            map.entry(h).or_insert_with(Vec::new).push(d);
+        });
 
         // Remove any directories with unique hashes.
         let (_unique, dup) = map
@@ -54,8 +49,6 @@ impl<'a> DupDirs<'a> {
                 (h, ds)
             })
             .collect::<collections::HashMap<_, _>>();
-       
-        
 
         // If a directory is a subdirectory of another directory with the same hash, remove it.
         let dup = dup
@@ -68,8 +61,8 @@ impl<'a> DupDirs<'a> {
                     let ancestor = ds2.iter().find(|d2| d.starts_with(*d2));
                     if ancestor.is_none() {
                         ds2.push(d);
-                    //} else {
-                    //    eprintln!("Removing {d:?} because of {ancestor:?}");
+                        //} else {
+                        //    eprintln!("Removing {d:?} because of {ancestor:?}");
                     }
                 }
                 (h, ds2)
@@ -125,14 +118,11 @@ impl<'a> DupDirs<'a> {
     }
 }
 
-
-
 // ============
 // === Main ===
 // ============
 
 pub fn main(dir_hashes: &str) -> Vec<String> {
-    let dup_dirs = DupDirs::default()
-        .dir_hashes(&dir_hashes);
+    let dup_dirs = DupDirs::default().dir_hashes(&dir_hashes);
     dup_dirs.dup_dirs()
 }

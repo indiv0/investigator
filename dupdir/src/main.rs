@@ -38,22 +38,20 @@
 //! exit
 //! cat target/data/dup_dirs.txt | cut -d';' -f2 | xargs -d '\n' du -d0 | sort -n
 //! ```
-use std::env;
-use std::path;
-use investigator::Hasher as _;
-use std::io;
 use indicatif::ProgressIterator as _;
+use investigator::Hasher as _;
+use std::env;
 use std::error;
+use std::io;
+use std::path;
 
-mod find;
 mod dir_files;
 mod dir_hashes;
 mod dup_dirs;
+mod find;
 mod hash;
 
 const UNIQUE_SEPARATOR: &str = "    ";
-
-
 
 fn main() {
     fn main_inner() -> Result<(), Box<dyn error::Error>> {
@@ -66,32 +64,32 @@ fn main() {
                 let paths = find::main(&path);
                 let mut writer = stdout_writer();
                 write_output(&mut writer, paths)?;
-            },
+            }
             "hash" => {
                 let path = path_arg(&mut args)?;
                 let paths = hash::main(&path);
                 let mut writer = stdout_writer();
                 write_output(&mut writer, paths)?;
-            },
+            }
             "dir_files" => {
                 let path = path_arg(&mut args)?;
                 let dir_files = dir_files::main(&path);
                 let mut writer = stdout_writer();
                 write_output(&mut writer, dir_files)?;
-            },
+            }
             "dir_hashes" => {
                 let files = path_arg(&mut args)?;
                 let hashes = path_arg(&mut args)?;
                 let dir_hashes = dir_hashes::main(&files, &hashes);
                 let mut writer = stdout_writer();
                 write_output(&mut writer, dir_hashes)?;
-            },
+            }
             "dup_dirs" => {
                 let dir_hashes = path_arg(&mut args)?;
                 let dup_dirs = dup_dirs::main(&dir_hashes);
                 let mut writer = stdout_writer();
                 write_output(&mut writer, dup_dirs)?;
-            },
+            }
             other => panic!("Unknown command: {other:?}"),
         }
         Ok(())
@@ -112,7 +110,7 @@ fn stdout_writer() -> io::StdoutLock<'static> {
     stdout.lock()
 }
 
-fn write_output(writer: &mut dyn io::Write, strings: Vec<String>) ->  Result<(), io::Error> {
+fn write_output(writer: &mut dyn io::Write, strings: Vec<String>) -> Result<(), io::Error> {
     let strings = strings.iter();
     let strings = strings.progress();
     let strings = strings.map(|string| write!(writer, "{string}\n"));
@@ -138,8 +136,6 @@ fn path_to_str(p: &path::Path) -> &str {
     p.to_str().expect("Path should be valid UTF-8")
 }
 
-
-
 // =============
 // === Tests ===
 // =============
@@ -150,13 +146,11 @@ mod tests {
     use crate::dir_hashes;
     use crate::find;
     use crate::hash;
+    use std::env;
     use std::fs;
+    use std::io;
     use std::io::Write as _;
     use std::process;
-    use std::io;
-    use std::env;
-
-
 
     // =================
     // === Constants ===
@@ -170,8 +164,6 @@ mod tests {
     const OUT_DIR_HASHES: &str = "out/dir_hashes.txt";
     const OUT_DUP_DIRS: &str = "out/dup_dirs.txt";
 
-
-
     // ============
     // === Find ===
     // ============
@@ -184,8 +176,6 @@ mod tests {
         assert_eq!(unix, walk_dir);
     }
 
-
-
     // ============
     // === Hash ===
     // ============
@@ -194,12 +184,9 @@ mod tests {
     #[ignore]
     fn test_hash() {
         const PATH: &str = "./data/files.txt";
-        let hasher = hash::Hasher::default()
-            .path(PATH);
+        let hasher = hash::Hasher::default().path(PATH);
         let _hashes = hasher.hash();
     }
-
-
 
     // ================
     // === DirFiles ===
@@ -209,12 +196,9 @@ mod tests {
     #[ignore]
     fn test_dir_files() {
         const PATH: &str = "./data/files.txt";
-        let dir_files = dir_files::DirFiles::default()
-            .files(PATH);
+        let dir_files = dir_files::DirFiles::default().files(PATH);
         let _dir_files = dir_files.dir_files();
     }
-
-
 
     // =================
     // === DirHashes ===
@@ -225,13 +209,9 @@ mod tests {
     fn test_dir_hashes() {
         const FILES: &str = "./data/dir_files.txt";
         const HASHES: &str = "./data/hashes.txt";
-        let dir_hashes = dir_hashes::DirHashes::default()
-            .files(FILES)
-            .hashes(HASHES);
+        let dir_hashes = dir_hashes::DirHashes::default().files(FILES).hashes(HASHES);
         let _dir_hashes = dir_hashes.dir_hashes();
     }
-
-
 
     // ===========
     // === All ===

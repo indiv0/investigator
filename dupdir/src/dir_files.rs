@@ -6,8 +6,6 @@ use std::io::BufRead as _;
 use std::path;
 use std::str;
 
-
-
 // ================
 // === DirFiles ===
 // ================
@@ -39,14 +37,20 @@ impl<'a> DirFiles<'a> {
 
         // Flatten the Map<Ancestor, Vec<File>> back into a Vec<(Ancestor, File)>
         let dirs_and_files = map.into_iter().progress();
-        let dirs_and_files = dirs_and_files.flat_map(|(a, f)| {
-            f.into_iter().map(move |f| (a.clone(), f))
-        });
+        let dirs_and_files =
+            dirs_and_files.flat_map(|(a, f)| f.into_iter().map(move |f| (a.clone(), f)));
         let dirs_and_files = dirs_and_files.inspect(|(a, f)| {
-            assert!(!a.contains(crate::UNIQUE_SEPARATOR), "Ancestor contains separator: {a:?}");
-            assert!(!f.contains(crate::UNIQUE_SEPARATOR), "File contains separator: {f:?}");
+            assert!(
+                !a.contains(crate::UNIQUE_SEPARATOR),
+                "Ancestor contains separator: {a:?}"
+            );
+            assert!(
+                !f.contains(crate::UNIQUE_SEPARATOR),
+                "File contains separator: {f:?}"
+            );
         });
-        let dirs_and_files = dirs_and_files.map(|(a, f)| format!("{a}{s}{f}", s = crate::UNIQUE_SEPARATOR, a = a, f = f));
+        let dirs_and_files = dirs_and_files
+            .map(|(a, f)| format!("{a}{s}{f}", s = crate::UNIQUE_SEPARATOR, a = a, f = f));
         let dirs_and_files = dirs_and_files.collect::<Vec<_>>();
         dirs_and_files
     }
@@ -100,14 +104,11 @@ fn assert_dir_rules(p: &path::Path) {
     assert!(p != path::Path::new(""), "Path is not valid: {p:?}");
 }
 
-
-
 // ============
 // === Main ===
 // ============
 
 pub fn main(path: &str) -> Vec<String> {
-    let dir_files = DirFiles::default()
-        .files(&path);
+    let dir_files = DirFiles::default().files(&path);
     dir_files.dir_files()
 }

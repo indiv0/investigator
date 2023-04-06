@@ -1,14 +1,12 @@
-use indicatif::ProgressIterator as _;
 use indicatif::ParallelProgressIterator as _;
+use indicatif::ProgressIterator as _;
 use investigator::Hasher as _;
-use rayon::iter::ParallelIterator as _;
 use rayon::iter::IntoParallelRefIterator as _;
+use rayon::iter::ParallelIterator as _;
 use std::fs;
 use std::io;
 use std::io::BufRead as _;
 use std::str;
-
-
 
 // ==============
 // === Hasher ===
@@ -36,7 +34,11 @@ impl<'a> Hasher<'a> {
         if let Some(skip) = self.skip {
             paths = paths.into_iter().skip(skip).collect::<Vec<_>>();
         }
-        let hashes = paths.par_iter().progress().map(|p| self.hash_path(p)).collect::<Vec<_>>();
+        let hashes = paths
+            .par_iter()
+            .progress()
+            .map(|p| self.hash_path(p))
+            .collect::<Vec<_>>();
 
         let hashes_and_paths = hashes.into_iter().progress().zip(paths);
         let hashes_and_paths = hashes_and_paths.map(|(h, p)| [h, p].join("  "));
@@ -54,7 +56,8 @@ impl<'a> Hasher<'a> {
     }
 
     fn hash_path(&self, path: &str) -> String {
-        let mut file = fs::File::open(path).unwrap_or_else(|_| panic!("Failed to open file: {path:?}"));
+        let mut file =
+            fs::File::open(path).unwrap_or_else(|_| panic!("Failed to open file: {path:?}"));
         let mut hasher = investigator::T1ha2::default();
         investigator::copy_wide(&mut file, &mut hasher).expect("Failed to hash file");
         let hash = hasher.finish().to_vec();
@@ -63,8 +66,6 @@ impl<'a> Hasher<'a> {
     }
 }
 
-
-
 // ============
 // === Main ===
 // ============
@@ -72,8 +73,6 @@ impl<'a> Hasher<'a> {
 pub fn main(path: &str) -> Vec<String> {
     const SKIP: usize = 0;
 
-    let hasher = Hasher::default()
-        .path(&path)
-        .skip(SKIP);
+    let hasher = Hasher::default().path(&path).skip(SKIP);
     hasher.hash()
 }
