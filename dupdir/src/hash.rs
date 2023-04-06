@@ -10,24 +10,25 @@ use std::str;
 // === Hasher ===
 // ==============
 
-#[derive(Debug, Default)]
-pub struct Hasher {
-    paths: crate::Lines,
+#[derive(Debug)]
+pub struct Hasher<'a> {
+    paths: &'a crate::Lines,
     skip: Option<usize>,
 }
 
-impl Hasher {
+impl<'a> Hasher<'a> {
+    pub fn new(paths: &'a crate::Lines) -> Self {
+        let skip = Default::default();
+        Self { skip, paths }
+    }
+
     pub fn skip(mut self, skip: usize) -> Self {
         self.skip = Some(skip);
         self
     }
 
-    pub fn paths(mut self, paths: crate::Lines) -> Self {
-        self.paths = paths;
-        self
-    }
-
     pub fn hash(self) -> Vec<String> {
+        self.paths.verify_paths();
         let crate::Lines(paths) = self.paths;
         let skip = self.skip.unwrap_or(0);
         let hashes_and_paths = paths
@@ -35,11 +36,10 @@ impl Hasher {
             .skip(skip)
             .progress()
             .map(|path| {
-                let hash = hash_path(&path);
+                let hash = hash_path(path);
                 format!("{hash}  {path}")
             });
-        let hashes_and_paths = hashes_and_paths.collect::<Vec<_>>();
-        hashes_and_paths
+        hashes_and_paths.collect::<Vec<_>>()
     }
 }
 
@@ -49,17 +49,17 @@ fn hash_path(path: &str) -> String {
     let mut hasher = investigator::T1ha2::default();
     investigator::copy_wide(&mut file, &mut hasher).expect("Failed to hash file");
     let hash = hasher.finish().to_vec();
-    let hash = hex::encode(hash);
-    hash
+    hex::encode(hash)
 }
 
 // ============
 // === Main ===
 // ============
 
-pub fn main(paths: crate::Lines) -> Vec<String> {
+pub fn main(paths: &crate::Lines) -> crate::Lines {
     const SKIP: usize = 0;
 
-    let hasher = Hasher::default().paths(paths).skip(SKIP);
-    hasher.hash()
+    let hasher = Hasher::new(paths).skip(SKIP);
+    let hashes = hasher.hash();
+    crate::Lines(hashes)
 }

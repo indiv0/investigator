@@ -1,9 +1,6 @@
 use indicatif::*;
 use rayon::prelude::*;
 use std::collections;
-use std::fs;
-use std::io;
-use std::io::BufRead as _;
 use std::str;
 
 const UNIQUE_SEPARATOR: &str = ";";
@@ -12,21 +9,22 @@ const UNIQUE_SEPARATOR: &str = ";";
 // === DupDirs ===
 // ===============
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct DupDirs<'a> {
-    dir_hashes: &'a str,
+    dir_hashes: &'a crate::Lines,
 }
 
 impl<'a> DupDirs<'a> {
-    pub fn dir_hashes(mut self, dir_hashes: &'a str) -> Self {
-        self.dir_hashes = dir_hashes;
-        self
+    pub fn new(dir_hashes: &'a crate::Lines) -> Self {
+        Self { dir_hashes }
     }
 
     pub fn dup_dirs(&self) -> Vec<String> {
         // Read the mapping of hash -> dir
         eprintln!("Reading (hash -> dir) mapping");
         let dir_hashes = self.read_dir_hashes();
+        // FIXME [NP]: avoid this collect
+        let dir_hashes = dir_hashes.collect::<Vec<_>>();
 
         // Convert the (hash -> dir) mapping to (hash -> dir1, dir2, ...)
         let mut map = collections::HashMap::new();
@@ -81,13 +79,12 @@ impl<'a> DupDirs<'a> {
             .progress()
             .flat_map(|(h, ds)| {
                 let ds = ds.into_iter();
-                let ds = ds.map(move |d| (h.clone(), d));
-                ds
+                ds.map(move |d| (h, d))
             })
             .collect::<Vec<_>>();
 
         // Sort the mapping by dir name.
-        dup_dirs.sort_by_key(|(_, d)| d.clone());
+        dup_dirs.sort_by_key(|(_, d)| *d);
 
         // Turn this into a list of strings.
         eprintln!("Convert vec<(hash, dir)> to vec<str>");
@@ -98,23 +95,20 @@ impl<'a> DupDirs<'a> {
                 assert!(!h.contains(UNIQUE_SEPARATOR));
                 assert!(!d.contains(UNIQUE_SEPARATOR));
             })
-            .map(|(h, d)| [h.as_str(), d.as_str()].join(UNIQUE_SEPARATOR))
+            .map(|(h, d)| [*h, *d].join(UNIQUE_SEPARATOR))
             .collect::<Vec<_>>();
         dup_dirs
     }
 
-    fn read_dir_hashes(&self) -> Vec<(String, String)> {
-        let file = fs::File::open(self.dir_hashes).expect("Failed to open file");
-        let file = io::BufReader::new(file);
-        let lines = file.lines().map(|l| l.expect("Failed to read line"));
-        let dir_hashes = lines.map(|l| {
-            let (hash, dir) = l.split_once("  ").expect("Failed to split line");
+    fn read_dir_hashes(&self) -> impl Iterator<Item = (&str, &str)> {
+        let crate::Lines(lines) = self.dir_hashes;
+        let lines = lines.iter();
+        lines.map(|line| {
+            let (hash, dir) = line.split_once("  ").expect("Failed to split line");
             crate::assert_path_rules(hash);
             crate::assert_path_rules(dir);
-            (hash.to_string(), dir.to_string())
-        });
-        let dir_hashes = dir_hashes.collect();
-        dir_hashes
+            (hash, dir)
+        })
     }
 }
 
@@ -122,7 +116,8 @@ impl<'a> DupDirs<'a> {
 // === Main ===
 // ============
 
-pub fn main(dir_hashes: &str) -> Vec<String> {
-    let dup_dirs = DupDirs::default().dir_hashes(&dir_hashes);
-    dup_dirs.dup_dirs()
+pub fn main(dir_hashes: &crate::Lines) -> crate::Lines {
+    let dup_dirs = DupDirs::new(dir_hashes);
+    let dup_dirs = dup_dirs.dup_dirs();
+    crate::Lines(dup_dirs)
 }

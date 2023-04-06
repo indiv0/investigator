@@ -18,6 +18,8 @@ impl<'a> DirFiles<'a> {
     }
 
     pub fn dir_files(&self) -> Vec<String> {
+        self.files.verify_paths();
+
         // Read the list of files
         let crate::Lines(files) = self.files;
 
@@ -47,8 +49,7 @@ impl<'a> DirFiles<'a> {
         });
         let dirs_and_files = dirs_and_files
             .map(|(a, f)| format!("{a}{s}{f}", s = crate::UNIQUE_SEPARATOR, a = a, f = f));
-        let dirs_and_files = dirs_and_files.collect::<Vec<_>>();
-        dirs_and_files
+        dirs_and_files.collect::<Vec<_>>()
     }
 }
 
@@ -59,30 +60,28 @@ fn files_to_ancestors_and_file(files: &[String]) -> Vec<(String, String)> {
         let dir = file_dir(f);
         // For each file, get it's ancestor dirs (including the parent)
         let ancestors = ancestors(dir);
-        let ancestors = ancestors.into_iter().map(|a| crate::path_to_str(a));
+        let ancestors = ancestors.into_iter();
+        let ancestors = ancestors.map(crate::path_to_str);
         let ancestors = ancestors.map(|s| s.to_string());
 
         // For each ancestor dir, map it to the file
-        let ancestors_and_file = ancestors.map(move |a| (a, f));
-        ancestors_and_file
+        ancestors.map(move |a| (a, f))
     });
     let dirs_and_files = dirs_and_files.map(|(a, f)| (a, f.to_string()));
-    let dirs_and_files = dirs_and_files.collect();
-    dirs_and_files
+    dirs_and_files.collect()
 }
 
-fn file_dir<'a>(path: &'a str) -> &'a path::Path {
+fn file_dir(path: &str) -> &path::Path {
     let path = path::Path::new(path);
     let dir = path.parent().unwrap();
     assert_dir_rules(dir);
     dir
 }
 
-fn ancestors<'a>(dir: &'a path::Path) -> Vec<&'a path::Path> {
+fn ancestors(dir: &path::Path) -> Vec<&path::Path> {
     let ancestors = dir.ancestors();
     let ancestors = ancestors.inspect(|a| assert_dir_rules(a));
-    let ancestors = ancestors.collect::<Vec<_>>();
-    ancestors
+    ancestors.collect::<Vec<_>>()
 }
 
 #[inline]
@@ -95,7 +94,8 @@ fn assert_dir_rules(p: &path::Path) {
 // === Main ===
 // ============
 
-pub fn main(files: &crate::Lines) -> Vec<String> {
+pub fn main(files: &crate::Lines) -> crate::Lines {
     let dir_files = DirFiles::new(files);
-    dir_files.dir_files()
+    let dir_files = dir_files.dir_files();
+    crate::Lines(dir_files)
 }

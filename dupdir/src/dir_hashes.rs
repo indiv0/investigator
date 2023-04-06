@@ -2,30 +2,21 @@ use indicatif::ParallelProgressIterator as _;
 use indicatif::ProgressIterator as _;
 use rayon::prelude::*;
 use std::collections;
-use std::fs;
-use std::io;
-use std::io::BufRead as _;
 use std::str;
 
 // =================
 // === DirHashes ===
 // =================
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct DirHashes<'a> {
-    files: &'a str,
-    hashes: &'a str,
+    dir_files: &'a crate::Lines,
+    hashes: &'a crate::Lines,
 }
 
 impl<'a> DirHashes<'a> {
-    pub fn files(mut self, files: &'a str) -> Self {
-        self.files = files;
-        self
-    }
-
-    pub fn hashes(mut self, hashes: &'a str) -> Self {
-        self.hashes = hashes;
-        self
+    pub fn new(dir_files: &'a crate::Lines, hashes: &'a crate::Lines) -> Self {
+        Self { dir_files, hashes }
     }
 
     pub fn dir_hashes(&self) -> Vec<String> {
@@ -39,6 +30,8 @@ impl<'a> DirHashes<'a> {
 
         // Convert the mapping of (hash -> file) to (file -> hash)
         eprintln!("Convert (hash -> file) to (file -> hash)");
+        // FIXME [NP]: avoid this collect and do the par_iter earlier.
+        let hashes = hashes.collect::<Vec<_>>();
         let hashes = hashes
             .into_par_iter()
             .progress()
@@ -47,13 +40,15 @@ impl<'a> DirHashes<'a> {
 
         // Convert the mapping of (dir -> file) to (dir -> hash)
         eprintln!("Convert (dir -> file) to (dir -> hash)");
+        // FIXME [NP]: avoid this collect
+        let dir_files = dir_files.collect::<Vec<_>>();
         let dir_hashes = dir_files
             .into_iter()
             .progress()
             .map(|(d, f)| {
                 let h = hashes.get(&f);
                 let h = h.unwrap_or_else(|| panic!("File must have a hash: {f:?}"));
-                let h = h.clone();
+                let h = *h;
                 (d, h)
             })
             .collect::<Vec<_>>();
@@ -85,39 +80,33 @@ impl<'a> DirHashes<'a> {
         let dir_hashes = dir_hashes
             .par_iter()
             .progress()
-            .map(|(h, d)| [h.as_str(), d.as_str()].join("  "))
+            .map(|(h, d)| [h.as_str(), d].join("  "))
             .collect::<Vec<_>>();
         dir_hashes
     }
 
-    fn read_hashes(&self) -> Vec<(String, String)> {
-        let file = fs::File::open(self.hashes).expect("Failed to open file");
-        let file = io::BufReader::new(file);
-        let lines = file.lines().map(|l| l.expect("Failed to read line"));
-        let hashes_and_files = lines.map(|l| {
-            let (hash, file) = l.split_once("  ").expect("Failed to split line");
+    fn read_hashes(&self) -> impl Iterator<Item = (&str, &str)> {
+        let crate::Lines(lines) = self.hashes;
+        let lines = lines.iter();
+        lines.map(|line| {
+            let (hash, file) = line.split_once("  ").expect("Failed to split line");
             crate::assert_path_rules(hash);
             crate::assert_path_rules(file);
-            (hash.to_string(), file.to_string())
-        });
-        let hashes_and_files = hashes_and_files.collect();
-        hashes_and_files
+            (hash, file)
+        })
     }
 
-    fn read_dir_files(&self) -> Vec<(String, String)> {
-        let file = fs::File::open(self.files).expect("Failed to open file");
-        let file = io::BufReader::new(file);
-        let lines = file.lines().map(|l| l.expect("Failed to read line"));
-        let dir_files = lines.map(|l| {
-            let (dir, file) = l
+    fn read_dir_files(&self) -> impl Iterator<Item = (&str, &str)> {
+        let crate::Lines(lines) = self.dir_files;
+        let lines = lines.iter();
+        lines.map(|line| {
+            let (dir, file) = line
                 .split_once(crate::UNIQUE_SEPARATOR)
                 .expect("Failed to split line");
             crate::assert_path_rules(dir);
             crate::assert_path_rules(file);
-            (dir.to_string(), file.to_string())
-        });
-        let dir_files = dir_files.collect();
-        dir_files
+            (dir, file)
+        })
     }
 }
 
@@ -125,7 +114,8 @@ impl<'a> DirHashes<'a> {
 // === Main ===
 // ============
 
-pub fn main(files: &str, hashes: &str) -> Vec<String> {
-    let dir_hashes = DirHashes::default().files(&files).hashes(&hashes);
-    dir_hashes.dir_hashes()
+pub fn main(dir_files: &crate::Lines, hashes: &crate::Lines) -> crate::Lines {
+    let dir_hashes = DirHashes::new(dir_files, hashes);
+    let dir_hashes = dir_hashes.dir_hashes();
+    crate::Lines(dir_hashes)
 }

@@ -72,8 +72,7 @@ impl<'a> Finder<'a> {
         let paths = stdout.lines();
         let paths = paths.inspect(|p| crate::assert_path_rules(p));
         let paths = paths.map(|p| p.trim().to_string());
-        let paths = paths.collect();
-        paths
+        paths.collect()
     }
 
     fn find_walk_dir(&self) -> Vec<String> {
@@ -93,8 +92,7 @@ impl<'a> Finder<'a> {
             assert!(!p.is_empty(), "Path is empty");
             p
         });
-        let paths = paths.collect::<Vec<String>>();
-        paths
+        paths.collect::<Vec<String>>()
     }
 }
 
@@ -103,7 +101,7 @@ impl<'a> Finder<'a> {
 // ============
 
 pub fn main(path: &str) -> crate::Lines {
-    let finder = Finder::default().path(&path).strategy(Strategy::WalkDir);
+    let finder = Finder::default().path(path).strategy(Strategy::WalkDir);
     let paths = finder.find();
     crate::Lines(paths)
 }

@@ -73,6 +73,15 @@ impl Lines {
         let path = path.as_ref();
         Self::try_from(path)
     }
+
+    // FIXME [NP]: encode this check in the type so we don't forget?
+    fn verify_paths(&self) {
+        let crate::Lines(lines) = self;
+        let lines = lines.iter();
+        lines.for_each(|line| {
+            crate::assert_path_rules(line);
+        });
+    }
 }
 
 // === Trait `impls` ===
@@ -104,17 +113,15 @@ fn main() {
         let mut args = env::args();
         let _command = args.next();
         let command = args.next().expect("Command required");
-        let strings = match command.as_str() {
+        let lines = match command.as_str() {
             "find" => {
                 let path = path_arg(&mut args)?;
-                let found_paths = find::main(&path);
-                let Lines(found_paths) = found_paths;
-                found_paths
+                find::main(&path)
             }
             "hash" => {
                 let path = path_arg(&mut args)?;
                 let paths = Lines::from_path(path)?;
-                hash::main(paths)
+                hash::main(&paths)
             }
             "dir_files" => {
                 let path = path_arg(&mut args)?;
@@ -122,24 +129,31 @@ fn main() {
                 dir_files::main(&files)
             }
             "dir_hashes" => {
-                let files = path_arg(&mut args)?;
+                let dir_files = path_arg(&mut args)?;
                 let hashes = path_arg(&mut args)?;
-                dir_hashes::main(&files, &hashes)
+                let dir_files = Lines::from_path(dir_files)?;
+                let hashes = Lines::from_path(hashes)?;
+                dir_hashes::main(&dir_files, &hashes)
             }
             "dup_dirs" => {
                 let dir_hashes = path_arg(&mut args)?;
+                let dir_hashes = Lines::from_path(dir_hashes)?;
                 dup_dirs::main(&dir_hashes)
             }
             "all" => {
                 let search_path = path_arg(&mut args)?;
-                let found_paths = find::main(&search_path);
-                hash::main(found_paths)
+                let files = find::main(&search_path);
+                let hashes = hash::main(&files);
+                let dir_files = dir_files::main(&files);
+                let dir_hashes = dir_hashes::main(&dir_files, &hashes);
+                dup_dirs::main(&dir_hashes)
             }
             other => panic!("Unknown command: {other:?}"),
         };
         // Write the resulting strings to stdout.
         let mut writer = stdout_writer();
-        write_output(&mut writer, strings)?;
+        let Lines(lines) = lines;
+        write_output(&mut writer, lines)?;
         Ok(())
     }
 
@@ -150,7 +164,7 @@ fn main() {
 
 fn path_arg(args: &mut env::Args) -> Result<String, &'static str> {
     let arg = args.next();
-    arg.ok_or_else(|| "Path not provided.")
+    arg.ok_or("Path not provided.")
 }
 
 fn stdout_writer() -> io::StdoutLock<'static> {
@@ -161,7 +175,7 @@ fn stdout_writer() -> io::StdoutLock<'static> {
 fn write_output(writer: &mut dyn io::Write, strings: Vec<String>) -> Result<(), io::Error> {
     let strings = strings.iter();
     let strings = strings.progress();
-    let strings = strings.map(|string| write!(writer, "{string}\n"));
+    let strings = strings.map(|string| writeln!(writer, "{string}"));
     strings.collect::<Result<(), _>>()
 }
 
@@ -174,7 +188,7 @@ fn hash_bytes(bytes: &[u8]) -> String {
 
 #[inline]
 fn assert_path_rules(p: &str) {
-    assert!(!p.contains("\r"), "Unsupported character in path");
+    assert!(!p.contains('\r'), "Unsupported character in path");
     assert!(!p.is_empty(), "Empty path");
     assert_eq!(p, p.trim(), "Extra whitespace in path");
 }
@@ -231,7 +245,7 @@ mod tests {
     #[test]
     fn test_hash() -> Result<(), io::Error> {
         let paths = crate::Lines::from_path(OUT_FILES)?;
-        let _hashes = hash::main(paths);
+        let _hashes = hash::main(&paths);
         Ok(())
     }
 
@@ -251,8 +265,11 @@ mod tests {
     // =================
 
     #[test]
-    fn test_dir_hashes() {
-        let _dir_hashes = dir_hashes::main(OUT_DIR_FILES, OUT_HASHES);
+    fn test_dir_hashes() -> Result<(), io::Error> {
+        let dir_files = crate::Lines::from_path(OUT_DIR_FILES)?;
+        let hashes = crate::Lines::from_path(OUT_HASHES)?;
+        let _dir_hashes = dir_hashes::main(&dir_files, &hashes);
+        Ok(())
     }
 
     // ===============
@@ -324,12 +341,12 @@ mod tests {
         let src = cwd.join("src");
         let src = src.to_str();
         let src = src.unwrap();
-        assert!(!src.contains(" "), "src path contains spaces: {:?}", src);
+        assert!(!src.contains(' '), "src path contains spaces: {src:?}");
         src.to_string()
     }
 
     fn cargo_run_command(args: &str, out_file: Option<&str>) {
-        let args = args.split(" ");
+        let args = args.split(' ');
         let output = process::Command::new("cargo")
             .arg("run")
             .args(args)
@@ -337,10 +354,10 @@ mod tests {
             .unwrap();
         let stdout = String::from_utf8(output.stdout).unwrap();
         let stderr = String::from_utf8(output.stderr).unwrap();
-        eprintln!("stderr: {}", stderr);
-        println!("stdout: {}", stdout);
+        eprintln!("stderr: {stderr}");
+        println!("stdout: {stdout}");
         let status = output.status;
-        assert!(status.success(), "Failed to run cargo: {:?}", status);
+        assert!(status.success(), "Failed to run cargo: {status:?}");
         if let Some(out_file) = out_file {
             write_to_file(out_file, &stdout);
         }
