@@ -3,11 +3,9 @@ use indicatif::ParallelProgressIterator as _;
 use investigator::Hasher as _;
 use rayon::iter::ParallelIterator as _;
 use rayon::iter::IntoParallelRefIterator as _;
-use std::env;
 use std::fs;
 use std::io;
 use std::io::BufRead as _;
-use std::io::Write as _;
 use std::str;
 
 
@@ -71,43 +69,11 @@ impl<'a> Hasher<'a> {
 // === Main ===
 // ============
 
-pub fn main(mut args: env::Args) {
+pub fn main(path: &str) -> Vec<String> {
     const SKIP: usize = 0;
-
-    let path = args.next().expect("Path not provided");
 
     let hasher = Hasher::default()
         .path(&path)
         .skip(SKIP);
-    let hashes = hasher.hash();
-
-    let stdout = io::stdout();
-    let mut handle = stdout.lock();
-    hashes
-        .iter()
-        .progress()
-        .for_each(|h| {
-            write!(handle, "{h}\n").expect("Failed to write to stdout");
-        })
+    hasher.hash()
 }
-
-
-
-// =============
-// === Tests ===
-// =============
-
-#[cfg(test)]
-mod tests {
-    use crate::hash;
-
-    #[test]
-    #[ignore]
-    fn test_hash() {
-        const PATH: &str = "./data/files.txt";
-        let hasher = hash::Hasher::default()
-            .path(PATH);
-        let _hashes = hasher.hash();
-    }
-}
-

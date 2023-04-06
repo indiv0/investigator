@@ -1,10 +1,8 @@
 use indicatif::ProgressIterator as _;
 use std::collections;
-use std::env;
 use std::fs;
 use std::io;
 use std::io::BufRead as _;
-use std::io::Write as _;
 use std::path;
 use std::str;
 
@@ -108,39 +106,8 @@ fn assert_dir_rules(p: &path::Path) {
 // === Main ===
 // ============
 
-pub fn main(mut args: env::Args) {
-    let path = args.next().expect("Path not provided");
-
+pub fn main(path: &str) -> Vec<String> {
     let dir_files = DirFiles::default()
         .files(&path);
-    let dir_files = dir_files.dir_files();
-
-    let stdout = io::stdout();
-    let mut handle = stdout.lock();
-    dir_files
-        .iter()
-        .progress()
-        .for_each(|l| {
-            write!(handle, "{l}\n").expect("Failed to write to stdout");
-        })
-}
-
-
-
-// =============
-// === Tests ===
-// =============
-
-#[cfg(test)]
-mod tests {
-    use crate::dir_files;
-
-    #[test]
-    #[ignore]
-    fn test_dir_files() {
-        const PATH: &str = "./data/files.txt";
-        let dir_files = dir_files::DirFiles::default()
-            .files(PATH);
-        let _dir_files = dir_files.dir_files();
-    }
+    dir_files.dir_files()
 }

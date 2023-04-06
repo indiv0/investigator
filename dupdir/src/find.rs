@@ -1,6 +1,3 @@
-use indicatif::ProgressIterator as _;
-use std::env;
-use std::io;
 #[cfg(test)]
 use std::process;
 use std::str;
@@ -108,43 +105,9 @@ impl<'a> Finder<'a> {
 // === Main ===
 // ============
 
-pub fn main(mut args: env::Args) {
-    let path = args.next().expect("Path not provided");
-
+pub fn main(path: &str) -> Vec<String> {
     let finder = Finder::default()
         .path(&path)
         .strategy(Strategy::WalkDir);
-    let paths = finder.find();
-
-    let stdout = io::stdout();
-    let mut handle = stdout.lock();
-    write_output(&mut handle, paths).expect("Failed to write file path.");
-}
-
-fn write_output(writer: &mut dyn io::Write, paths: Vec<String>) ->  Result<(), io::Error> {
-    let paths = paths.iter();
-    let paths = paths.progress();
-    let paths = paths.map(|path| write!(writer, "{path}\n"));
-    let paths = paths.collect::<Result<(), _>>();
-    paths
-}
-
-
-
-// =============
-// === Tests ===
-// =============
-
-#[cfg(test)]
-mod tests {
-    use crate::find;
-
-    #[test]
-    fn test_unix_and_walkdir_are_identical() {
-        const PATH: &str = "/Users/indiv0/Desktop/files";
-        let finder = find::Finder::default().path(PATH);
-        let unix = finder.clone().strategy(find::Strategy::Unix).find();
-        let walk_dir = finder.strategy(find::Strategy::WalkDir).find();
-        assert_eq!(unix, walk_dir);
-    }
+    finder.find()
 }

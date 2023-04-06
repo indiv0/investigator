@@ -2,11 +2,9 @@ use indicatif::ProgressIterator as _;
 use indicatif::ParallelProgressIterator as _;
 use rayon::prelude::*;
 use std::collections;
-use std::env;
 use std::fs;
 use std::io;
 use std::io::BufRead as _;
-use std::io::Write as _;
 use std::str;
 
 
@@ -134,43 +132,9 @@ impl<'a> DirHashes<'a> {
 // === Main ===
 // ============
 
-pub fn main(mut args: env::Args) {
-    let files = args.next().expect("Path not provided");
-    let hashes = args.next().expect("Path not provided");
-
+pub fn main(files: &str, hashes: &str) -> Vec<String> {
     let dir_hashes = DirHashes::default()
         .files(&files)
         .hashes(&hashes);
-    let dir_hashes = dir_hashes.dir_hashes();
-
-    let stdout = io::stdout();
-    let mut handle = stdout.lock();
-    dir_hashes
-        .iter()
-        .progress()
-        .for_each(|l| {
-            write!(handle, "{l}\n").expect("Failed to write to stdout");
-        })
-}
-
-
-
-// =============
-// === Tests ===
-// =============
-
-#[cfg(test)]
-mod tests {
-    use crate::dir_hashes;
-
-    #[test]
-    #[ignore]
-    fn test_dir_hashes() {
-        const FILES: &str = "./data/dir_files.txt";
-        const HASHES: &str = "./data/hashes.txt";
-        let dir_hashes = dir_hashes::DirHashes::default()
-            .files(FILES)
-            .hashes(HASHES);
-        let _dir_hashes = dir_hashes.dir_hashes();
-    }
+    dir_hashes.dir_hashes()
 }
