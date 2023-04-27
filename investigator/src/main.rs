@@ -42,29 +42,32 @@ impl<'a> Input<'a> {
 // === impl_hash ===
 
 macro_rules! impl_hash {
-    ($( ($name:expr, $ident:ident) ),*,) => {
-        impl<'a> Input<'a> {
-            fn hash(&mut self, algorithm: &str) -> io::Result<(Vec<u8>, &str)> {
-                match algorithm {
-                $(
-                    $name => {
-                        let mut hasher = investigator::$ident::default();
-                        match self {
-                            Self::Stdin { path, stdin } => {
-                                let mut stdin = stdin.lock();
-                                investigator::copy_wide(&mut stdin , &mut hasher)?;
-                                let hash = hasher.finish().to_vec();
-                                Ok((hash, path))
-                            },
-                            Self::File { path, file } => {
-                                investigator::copy_wide(file, &mut hasher)?;
-                                let hash = hasher.finish().to_vec();
-                                Ok((hash, path))
-                            },
-                        }
-                    },
-                )*
-                    _ => panic!("Unknown algorithm: {algorithm}"),
+    ($( $ident:ident ),*,) => {
+        paste::paste! {
+            impl<'a> Input<'a> {
+                fn hash(&mut self, algorithm: &str) -> io::Result<(Vec<u8>, &str)> {
+                    match algorithm {
+                    $(
+                        #[cfg(feature = "hash-" $ident)]
+                        stringify!([<$ident:snake:lower>]) => {
+                            let mut hasher = investigator::$ident::default();
+                            match self {
+                                Self::Stdin { path, stdin } => {
+                                    let mut stdin = stdin.lock();
+                                    investigator::copy_wide(&mut stdin , &mut hasher)?;
+                                    let hash = hasher.finish().to_vec();
+                                    Ok((hash, path))
+                                },
+                                Self::File { path, file } => {
+                                    investigator::copy_wide(file, &mut hasher)?;
+                                    let hash = hasher.finish().to_vec();
+                                    Ok((hash, path))
+                                },
+                            }
+                        },
+                    )*
+                        _ => panic!("Unknown algorithm: {algorithm}"),
+                    }
                 }
             }
         }
@@ -72,47 +75,47 @@ macro_rules! impl_hash {
 }
 
 impl_hash!(
-    //("adler32", Adler32),
-    //("adler32rolling", Adler32Rolling),
-    //("belthash", BeltHash),
-    //("blake2b", Blake2b),
-    //("blake2b_simd", Blake2bSimd),
-    //("blake2s", Blake2s),
-    //("blake2s_simd", Blake2sSimd),
-    //("blake3", Blake3),
-    //("crc32fast", Crc32Fast),
-    //("farm_hash", FarmHash),
-    //("fnv", Fnv),
-    //("fsb256", Fsb256),
-    //("fsb512", Fsb512),
-    //("fxhasher", FxHasher),
-    //("fxhasher32", FxHasher32),
-    //("fxhasher64", FxHasher64),
-    //("fxhasher_rustc", FxHasherRustc),
-    //("groestl256", Groestl256),
-    //("groestl512", Groestl512),
-    //("md5", Md5),
-    //("metrohash64", MetroHash64),
-    //("metrohash128", MetroHash128),
-    //("ripemd160", Ripemd160),
-    //("seahash", Seahash),
-    //("sha256", Sha256),
-    //("sha512", Sha512),
-    //("sha3_256", Sha3_256),
-    //("sha3_512", Sha3_512),
-    //("shabal512", Shabal512),
-    //("siphash", Siphash),
-    //("sm3", Sm3),
-    //("t1ha", T1ha),
-    ("t1ha2", T1ha2),
-    //("tiger", Tiger),
-    //("tiger2", Tiger2),
-    //("whirlpool", Whirlpool),
-    //("xxh3", Xxh3),
-    //("xxh64", Xxh64),
-    //("xxh64_twohash", Xxh64TwoHash),
-    //("xxh2_32", Xxh2_32),
-    //("xxh2_64", Xxh2_64)
+    Adler32,
+    Adler32Rolling,
+    BeltHash,
+    Blake2b,
+    Blake2bSimd,
+    Blake2s,
+    Blake2sSimd,
+    Blake3,
+    Crc32Fast,
+    FarmHash,
+    Fnv,
+    Fsb256,
+    Fsb512,
+    FxHasher,
+    FxHasher32,
+    FxHasher64,
+    FxHasherRustc,
+    Groestl256,
+    Groestl512,
+    Md5,
+    MetroHash64,
+    MetroHash128,
+    Ripemd160,
+    Seahash,
+    Sha256,
+    Sha512,
+    Sha3_256,
+    Sha3_512,
+    Shabal512,
+    Siphash,
+    Sm3,
+    T1ha,
+    T1ha2,
+    Tiger,
+    Tiger2,
+    Whirlpool,
+    Xxh3,
+    Xxh64,
+    Xxh64TwoHash,
+    Xxh2_32,
+    Xxh2_64,
 );
 
 

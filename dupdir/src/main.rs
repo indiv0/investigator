@@ -1,43 +1,3 @@
-//! Usage:
-//! ```
-//! mkdir -p target/data
-//! clear && cargo check && RUST_BACKTRACE=1 time cargo run --release old_dup_dirs
-//! cat target/data/dupdirs_by_path.txt | awk '{ print length, $0 }' | sort -n -s -r | cut -d" " -f2- > tmp.txt
-//! scp tmp.txt 172.30.194.6:
-//! ssh 172.30.194.6
-//! sudo mv tmp.txt /storage/tmp.txt
-//! sudo su
-//! cd /storage
-//! cat tmp.txt | grep -v "'" | grep -v ' \./lap-ca-nik-01\| \./lab-ca-kvm-02' | cut -d' ' -f2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27 | xargs -I{} du -d 0 "{}" | sort -n
-//! ```
-//!
-//! Other usage:
-//! ```
-//! mkdir -p target/data
-//! clear && cargo check && RUST_BACKTRACE=1 time cargo run --release old_dup_dirs
-//! cat target/data/dupdirs_by_path.txt | cut -d' ' -f2- | xargs -d '\n' du -d0 | sort -n
-//! ```
-//!
-//! New usage:
-//! ```
-//! clear && \
-//!   cargo check && \
-//!   cargo test --color=always 2>&1 && \
-//!   cargo build --release
-//! find /Users/indiv0/Desktop/files -type f -name '*'$'\r''*'
-//! find /Users/indiv0/Desktop/files -type f -name '*'$'\r''*' -delete
-//! find /Users/indiv0/Desktop/files -not -perm -u=r -not -perm -u=w -not -perm -u=x -ls
-//! find /Users/indiv0/Desktop/files -not -perm -u=r -not -perm -u=w -not -perm -u=x -delete
-//! mkdir -p target/data
-//! sudo su
-//! time ./target/release/dupdir find /Users/indiv0/Desktop/files > target/data/files.txt && chown indiv0 target/data/files.txt
-//! time ./target/release/dupdir hash target/data/files.txt > target/data/hashes.txt && chown indiv0 target/data/hashes.txt
-//! time ./target/release/dupdir dir_files target/data/files.txt > target/data/dir_files.txt && chown indiv0 target/data/dir_files.txt
-//! time ./target/release/dupdir dir_hashes target/data/dir_files.txt target/data/hashes.txt > target/data/dir_hashes.txt && chown indiv0 target/data/dir_hashes.txt
-//! time ./target/release/dupdir dup_dirs target/data/dir_hashes.txt > target/data/dup_dirs.txt && chown indiv0 target/data/dup_dirs.txt
-//! exit
-//! cat target/data/dup_dirs.txt | cut -d';' -f2 | xargs -d '\n' du -d0 | sort -n
-//! ```
 use indicatif::ProgressIterator as _;
 use investigator::Hasher as _;
 use std::env;
@@ -46,6 +6,8 @@ use std::io;
 use std::path;
 use std::fs;
 use std::io::BufRead as _;
+use std::str;
+use std::str::FromStr as _;
 
 mod dir_files;
 mod dir_hashes;
@@ -58,6 +20,39 @@ mod hash;
 // =================
 
 const UNIQUE_SEPARATOR: &str = "    ";
+
+// ===============
+// === Command ===
+// ===============
+
+#[derive(Debug)]
+enum Command {
+    Find,
+    Hash,
+    DirFiles,
+    DirHashes,
+    DupDirs,
+    All,
+}
+
+// === Trait `impl`s ===
+
+impl str::FromStr for Command {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let command = match s {
+            "find" => Self::Find,
+            "hash" => Self::Hash,
+            "dir_files" => Self::DirFiles,
+            "dir_hashes" => Self::DirHashes,
+            "dup_dirs" => Self::DupDirs,
+            "all" => Self::All,
+            _ => Err(format!("Invalid command: {s}"))?,
+        };
+        Ok(command)
+    }
+}
 
 // =============
 // === Lines ===
@@ -113,42 +108,42 @@ fn main() {
         let mut args = env::args();
         let _command = args.next();
         let command = args.next().expect("Command required");
-        let lines = match command.as_str() {
-            "find" => {
+        let command = Command::from_str(&command)?;
+        let lines = match command {
+            Command::Find => {
                 let path = path_arg(&mut args)?;
                 find::main(&path)
             }
-            "hash" => {
+            Command::Hash => {
                 let path = path_arg(&mut args)?;
                 let paths = Lines::from_path(path)?;
                 hash::main(&paths)
             }
-            "dir_files" => {
+            Command::DirFiles => {
                 let path = path_arg(&mut args)?;
                 let files = Lines::from_path(path)?;
                 dir_files::main(&files)
             }
-            "dir_hashes" => {
+            Command::DirHashes => {
                 let dir_files = path_arg(&mut args)?;
                 let hashes = path_arg(&mut args)?;
                 let dir_files = Lines::from_path(dir_files)?;
                 let hashes = Lines::from_path(hashes)?;
                 dir_hashes::main(&dir_files, &hashes)
             }
-            "dup_dirs" => {
+            Command::DupDirs => {
                 let dir_hashes = path_arg(&mut args)?;
                 let dir_hashes = Lines::from_path(dir_hashes)?;
                 dup_dirs::main(&dir_hashes)
             }
-            "all" => {
+            Command::All => {
                 let search_path = path_arg(&mut args)?;
                 let files = find::main(&search_path);
                 let hashes = hash::main(&files);
                 let dir_files = dir_files::main(&files);
                 let dir_hashes = dir_hashes::main(&dir_files, &hashes);
                 dup_dirs::main(&dir_hashes)
-            }
-            other => panic!("Unknown command: {other:?}"),
+            },
         };
         // Write the resulting strings to stdout.
         let mut writer = stdout_writer();

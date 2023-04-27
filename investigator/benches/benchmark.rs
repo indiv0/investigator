@@ -1,4 +1,3 @@
-use investigator::Hasher as TRAIT_Hasher;
 use rand::RngCore as TRAIT_RngCore;
 use std::fs;
 use std::io::Write as TRAIT_Write;
@@ -24,30 +23,34 @@ const FILE_SIZES: [usize; 4] = [KB, 5 * KB, 10 * KB, 50 * KB];
 
 macro_rules! impl_bench_group_hash {
     ($( ($name:expr, $ty:ident) ),*,) => {
-        fn hash(c: &mut criterion::Criterion) {
-            let bufs = MEMORY_SIZES.iter().map(|&size| {
-                let mut buf = vec![0; size];
-                rand::thread_rng().fill_bytes(&mut buf);
-                buf
-            }).collect::<Vec<_>>();
+        paste::paste! {
+            fn hash(c: &mut criterion::Criterion) {
+                panic!("foo");
+                let bufs = MEMORY_SIZES.iter().map(|&size| {
+                    let mut buf = vec![0; size];
+                    rand::thread_rng().fill_bytes(&mut buf);
+                    buf
+                }).collect::<Vec<_>>();
 
-            let mut group = c.benchmark_group("hash");
-            for (idx, size) in MEMORY_SIZES.iter().enumerate() {
-                let buf = &bufs[idx][..];
-                group.throughput(criterion::Throughput::Bytes(*size as u64));
-                $(
-                group.bench_with_input(criterion::BenchmarkId::new($name, size), size, |b, &_size| {
-                    b.iter(|| {
-                        let mut buf = criterion::black_box(buf);
-                        let mut reader = &mut buf;
-                        let mut hasher = investigator::$ty::default();
-                        hasher.update(criterion::black_box(&mut reader));
-                        hasher.finish()
-                    })
-                });
-                )*
+                let mut group = c.benchmark_group("hash");
+                for (idx, size) in MEMORY_SIZES.iter().enumerate() {
+                    let buf = &bufs[idx][..];
+                    group.throughput(criterion::Throughput::Bytes(*size as u64));
+                    $(
+                    #[cfg(feature = "hash-" $ty)]
+                    group.bench_with_input(criterion::BenchmarkId::new($name, size), size, |b, &_size| {
+                        b.iter(|| {
+                            let mut buf = criterion::black_box(buf);
+                            let mut reader = &mut buf;
+                            let mut hasher = investigator::$ty::default();
+                            investigator::Hasher::update(&mut hasher, criterion::black_box(&mut reader));
+                            investigator::Hasher::finish(hasher)
+                        })
+                    });
+                    )*
+                }
+                group.finish();
             }
-            group.finish();
         }
     };
 }
@@ -100,42 +103,45 @@ impl_bench_group_hash!(
 
 macro_rules! impl_bench_group_hash_file {
     ($( ($name:expr, $ty:ident) ),*,) => {
-        fn hash_file(c: &mut criterion::Criterion) {
-            let bufs = FILE_SIZES.iter().map(|&size| {
-                let mut buf = vec![0; size];
-                rand::thread_rng().fill_bytes(&mut buf);
-                buf
-            }).collect::<Vec<_>>();
+        paste::paste! {
+            fn hash_file(c: &mut criterion::Criterion) {
+                let bufs = FILE_SIZES.iter().map(|&size| {
+                    let mut buf = vec![0; size];
+                    rand::thread_rng().fill_bytes(&mut buf);
+                    buf
+                }).collect::<Vec<_>>();
 
-            let tmp_dir = tempdir::TempDir::new("investigator").unwrap();
+                let tmp_dir = tempdir::TempDir::new("investigator").unwrap();
 
-            let files = bufs.iter().zip(FILE_SIZES.iter()).map(|(buf, &size)| {
-                let path = tmp_dir.path().join(format!("{size}"));
-                let mut file = std::fs::File::create(&path).unwrap();
-                file.write_all(buf).unwrap();
-                path
-            }).collect::<Vec<_>>();
+                let files = bufs.iter().zip(FILE_SIZES.iter()).map(|(buf, &size)| {
+                    let path = tmp_dir.path().join(format!("{size}"));
+                    let mut file = std::fs::File::create(&path).unwrap();
+                    file.write_all(buf).unwrap();
+                    path
+                }).collect::<Vec<_>>();
 
-            let mut group = c.benchmark_group("hash_file");
-            for (idx, size) in FILE_SIZES.iter().enumerate() {
-                let path = files[idx].as_path();
-                group.throughput(criterion::Throughput::Bytes(*size as u64));
-                $(
-                group.bench_with_input(criterion::BenchmarkId::new($name, size), size, |b, &_size| {
-                    b.iter(|| {
-                        let path = criterion::black_box(path);
-                        let mut reader = fs::File::open(path).unwrap();
-                        let mut hasher = investigator::$ty::default();
-                        investigator::copy_wide(
-                            criterion::black_box(&mut reader),
-                            criterion::black_box(&mut hasher),
-                        ).unwrap();
-                        hasher.finish()
-                    })
-                });
-                )*
+                let mut group = c.benchmark_group("hash_file");
+                for (idx, size) in FILE_SIZES.iter().enumerate() {
+                    let path = files[idx].as_path();
+                    group.throughput(criterion::Throughput::Bytes(*size as u64));
+                    $(
+                    #[cfg(feature = "hash-" $ty)]
+                    group.bench_with_input(criterion::BenchmarkId::new($name, size), size, |b, &_size| {
+                        b.iter(|| {
+                            let path = criterion::black_box(path);
+                            let mut reader = fs::File::open(path).unwrap();
+                            let mut hasher = investigator::$ty::default();
+                            investigator::copy_wide(
+                                criterion::black_box(&mut reader),
+                                criterion::black_box(&mut hasher),
+                            ).unwrap();
+                            investigator::Hasher::finish(hasher)
+                        })
+                    });
+                    )*
+                }
+                group.finish();
             }
-            group.finish();
         }
     };
 }

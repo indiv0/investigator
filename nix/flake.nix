@@ -31,47 +31,19 @@
             }
             {
               packages = with pkgs; [
-                ### cloud-v2 dependencies ####
+                ### Project dependencies ###
 
                 rust
+
+                ### Dependency dependencies ###
+
                 cmake # required by xxhash dep
                 openssl
+                gnuplot # required by criterion benchmark dep
 
-                #awscli2
-                #google-cloud-sdk
-                #terraform
-
-                #awslogs
-                #nixpkgs-fmt
-
-                #nodejs
-
-                ## Provides `sops` CLI tool for decrypting and editing `secrets.enc.npekin.yaml` and other files.
-                #sops
-
-
-
-                #### Enso IDE dependencies ###
-
-                #graalvm11-ce
-                #python2
-
-
-
-                #### ensogl dependencies ###
-
-                #binaryen
-                #pkg-config
-                #openssl
-                #chromedriver
-
-
-                #### macOS-specific dependencies ###
+                ### macOS-specific dependencies ###
 
                 libiconv
-                #darwin.apple_sdk.frameworks.Cocoa
-                #darwin.apple_sdk.frameworks.Security
-                #curl
               ];
 
               # Rust dependencies that require a C compiler always use the native compiler, but when

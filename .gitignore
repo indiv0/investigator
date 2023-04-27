@@ -1,13 +1,8 @@
 # investigator
-/investigator/target/debug
-/investigator/target/release
-/investigator/target/.rustc_info.json
-/investigator/target/CACHEDIR.TAG
-/investigator/target/tmp
 /investigator/benches/random_data
 
-# dupdir
-/dupdir/target
+# rust/cargo
+/target
 
 # created by rust-analyzer extension of vscode
 /rust-analyzer-target

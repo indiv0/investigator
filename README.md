@@ -2,23 +2,66 @@
 
 ## Quickstart
 
-```
-# Install XCode Command Line Developer Tools.
-xcode-select --install
-# Install Rust & Cargo via Nix.
-nix-shell --packages rustup libiconv cmake openssl
-rustup update nightly
+```sh
+# Install dependencies necessary to run development environment.
+make pre-dependencies
+# Update developer environment to latest version.
+make update-dev-env
+# Enable developer environment.
+make dev-env
+cd ..
 # Install cargo-watch to automatically rebuild during development.
-cargo install cargo-watch
+make post-dependencies
 # Build, test, and run benchmarks
-cargo build && cargo test && cargo bench && cargo build --release
+make run
 ```
 
-# Performance
+## DupDir Usage
 
-## Benchmark by File Size (M2; Slowest Highlighted)
+Usage:
+```sh
+mkdir -p target/data
+clear && cargo check && RUST_BACKTRACE=1 time cargo run --release old_dup_dirs
+cat target/data/dupdirs_by_path.txt | awk '{ print length, $0 }' | sort -n -s -r | cut -d" " -f2- > tmp.txt
+scp tmp.txt 172.30.194.6:
+ssh 172.30.194.6
+sudo mv tmp.txt /storage/tmp.txt
+sudo su
+cd /storage
+cat tmp.txt | grep -v "'" | grep -v ' \./lap-ca-nik-01\| \./lab-ca-kvm-02' | cut -d' ' -f2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27 | xargs -I{} du -d 0 "{}" | sort -n
+```
+
+Other usage:
+```sh
+mkdir -p target/data
+clear && cargo check && RUST_BACKTRACE=1 time cargo run --release old_dup_dirs
+cat target/data/dupdirs_by_path.txt | cut -d' ' -f2- | xargs -d '\n' du -d0 | sort -n
+```
+
+New usage:
+```sh
+clear && cargo run --package utils
+find /Users/indiv0/Desktop/files -type f -name '*'$'\r''*'
+find /Users/indiv0/Desktop/files -type f -name '*'$'\r''*' -delete
+find /Users/indiv0/Desktop/files -not -perm -u=r -not -perm -u=w -not -perm -u=x -ls
+find /Users/indiv0/Desktop/files -not -perm -u=r -not -perm -u=w -not -perm -u=x -delete
+mkdir -p target/data
+sudo su
+time ./target/release/dupdir find /Users/indiv0/Desktop/files > target/data/files.txt && chown indiv0 target/data/files.txt
+time ./target/release/dupdir hash target/data/files.txt > target/data/hashes.txt && chown indiv0 target/data/hashes.txt
+time ./target/release/dupdir dir_files target/data/files.txt > target/data/dir_files.txt && chown indiv0 target/data/dir_files.txt
+time ./target/release/dupdir dir_hashes target/data/dir_files.txt target/data/hashes.txt > target/data/dir_hashes.txt && chown indiv0 target/data/dir_hashes.txt
+time ./target/release/dupdir dup_dirs target/data/dir_hashes.txt > target/data/dup_dirs.txt && chown indiv0 target/data/dup_dirs.txt
+exit
+cat target/data/dup_dirs.txt | cut -d';' -f2 | xargs -d '\n' du -d0 | sort -n
+```
+
+## Investigator Performance
+
+### Benchmark by File Size (M2; Slowest Highlighted)
 
 ```shell
+$ cd investigator
 $ head -c 10000000 /dev/urandom > benches/random_data
 $ rm bench.txt && ./bench.sh benches/random_data 2>&1 | tee -a bench.txt
 $ head -c 1000000000 /dev/urandom > /tmp/random_data
@@ -73,9 +116,10 @@ $ rm bench.txt && ./bench.sh /tmp/random_data 2>&1 | tee -a bench.txt
 | xxh2_32          | 0m0.039s     | **0m3.806s** |           |
 | xxh2_64          | 0m0.038s     | **0m3.647s** |           |
 
-## Benchmark by File Size (Xeon; Slowest Highlighted)
+### Benchmark by File Size (Xeon; Slowest Highlighted)
 
 ```shell
+$ cd investigator
 $ head -c 10000000 /dev/urandom > benches/random_data
 $ rm bench.txt && ./bench.sh /tmp/random_data 2>&1 | tee -a bench.txt
 $ head -c 1000000000 /dev/urandom > /tmp/random_data
