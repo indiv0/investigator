@@ -213,6 +213,7 @@ mod tests {
     // === Constants ===
     // =================
 
+    #[allow(dead_code)]
     const REAL_FIND_PATH: &str = "/Users/indiv0/Desktop/files";
     const MOCK_FIND_PATH: &str = "src";
     const OUT_FILES: &str = "out/files.txt";
@@ -220,6 +221,7 @@ mod tests {
     const OUT_DIR_FILES: &str = "out/dir_files.txt";
     const OUT_DIR_HASHES: &str = "out/dir_hashes.txt";
     const OUT_DUP_DIRS: &str = "out/dup_dirs.txt";
+    const OUT_ALL: &str = "out/all.txt";
 
     // ============
     // === Find ===
@@ -238,6 +240,7 @@ mod tests {
     // ============
 
     #[test]
+    #[ignore]
     fn test_hash() -> Result<(), io::Error> {
         let paths = crate::Lines::from_path(OUT_FILES)?;
         let _hashes = hash::main(&paths);
@@ -274,6 +277,7 @@ mod tests {
     // ===============
 
     #[test]
+    #[ignore]
     fn test_dup_dirs() {
         create_dir("out").unwrap();
         find();
@@ -314,7 +318,6 @@ mod tests {
     // ===========
 
     #[test]
-    #[ignore]
     fn test_all() {
         create_dir("out").unwrap();
         all();
@@ -323,8 +326,7 @@ mod tests {
     fn all() {
         let src = src_dir();
         let args = format!("all {src} {OUT_FILES}");
-        // FIXME [NP]: output
-        cargo_run_command(&args, None);
+        cargo_run_command(&args, Some(OUT_ALL));
     }
 
     fn create_dir(path: &str) -> io::Result<()> {
