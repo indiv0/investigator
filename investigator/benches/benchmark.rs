@@ -1,6 +1,7 @@
 use rand::RngCore as TRAIT_RngCore;
 use std::fs;
 use std::io::Write as TRAIT_Write;
+use std::time;
 
 
 
@@ -10,8 +11,12 @@ use std::io::Write as TRAIT_Write;
 
 const KB: usize = 1000; // 1000 Bytes
 const MB: usize = 1000 * KB; // 1000 * 1000 Bytes
-const MEMORY_SIZES: [usize; 2] = [MB, 2 * MB];
-const FILE_SIZES: [usize; 4] = [KB, 5 * KB, 10 * KB, 50 * KB];
+const MEMORY_SIZES: [usize; 1] = [2 * MB];
+const FILE_SIZES: [usize; 1] = [50 * KB];
+const WARM_UP_TIME_MILLIS: u64 = 100; // Defaults to 3000
+const MEASUREMENT_TIME_MILLIS: u64 = 1000; // Defaults to 10000?
+const SAMPLE_SIZE: usize = 10; // Defaults to 1000?
+const NUMBER_OF_SAMPLES: usize = 10; // Defaults to 100
 
 
 
@@ -22,10 +27,12 @@ const FILE_SIZES: [usize; 4] = [KB, 5 * KB, 10 * KB, 50 * KB];
 // === impl_bench_group_hash ===
 
 macro_rules! impl_bench_group_hash {
-    ($( ($name:expr, $ty:ident) ),*,) => {
+    ($( $ty:ident ),*,) => {
+        impl_bench_group_hash!(@ $( (stringify!($ty), $ty), )* );
+    };
+    (@ $( ($name:expr, $ty:ident) ),*,) => {
         paste::paste! {
             fn hash(c: &mut criterion::Criterion) {
-                panic!("foo");
                 let bufs = MEMORY_SIZES.iter().map(|&size| {
                     let mut buf = vec![0; size];
                     rand::thread_rng().fill_bytes(&mut buf);
@@ -56,53 +63,56 @@ macro_rules! impl_bench_group_hash {
 }
 
 impl_bench_group_hash!(
-    //("adler32", Adler32),
-    ("adler32rolling", Adler32Rolling),
-    //("belthash", BeltHash),
-    //("blake2b", Blake2b),
-    //("blake2b_simd", Blake2bSimd),
-    //("blake2s", Blake2s),
-    //("blake2s_simd", Blake2sSimd),
-    ("blake3", Blake3),
-    //("crc32fast", Crc32Fast),
-    //("farm_hash", FarmHash),
-    //("fnv", Fnv),
-    //("fsb256", Fsb256),
-    //("fsb512", Fsb512),
-    //("fxhasher", FxHasher),
-    //("fxhasher32", FxHasher32),
-    //("fxhasher64", FxHasher64),
-    //("fxhasher_rustc", FxHasherRustc),
-    //("groestl256", Groestl256),
-    //("groestl512", Groestl512),
-    //("md5", Md5),
-    //("metrohash64", MetroHash64),
-    //("metrohash128", MetroHash128),
-    //("ripemd160", Ripemd160),
-    //("seahash", Seahash),
-    ("sha256", Sha256),
-    //("sha512", Sha512),
-    //("sha3_256", Sha3_256),
-    //("sha3_512", Sha3_512),
-    //("shabal512", Shabal512),
-    //("siphash", Siphash),
-    //("sm3", Sm3),
-    //("t1ha", T1ha),
-    ("t1ha2", T1ha2),
-    //("tiger", Tiger),
-    //("tiger2", Tiger2),
-    //("whirlpool", Whirlpool),
-    //("xxh3", Xxh3),
-    //("xxh64", Xxh64),
-    //("xxh64_twohash", Xxh64TwoHash),
-    //("xxh2_32", Xxh2_32),
-    //("xxh2_64", Xxh2_64),
+    Adler32,
+    Adler32Rolling,
+    BeltHash,
+    Blake2b,
+    Blake2bSimd,
+    Blake2s,
+    Blake2sSimd,
+    Blake3,
+    Crc32Fast,
+    FarmHash,
+    Fnv,
+    Fsb256,
+    Fsb512,
+    FxHasher,
+    FxHasher32,
+    FxHasher64,
+    FxHasherRustc,
+    Groestl256,
+    Groestl512,
+    Md5,
+    MetroHash64,
+    MetroHash128,
+    Ripemd160,
+    Seahash,
+    Sha256,
+    Sha512,
+    Sha3_256,
+    Sha3_512,
+    Shabal512,
+    Siphash,
+    Sm3,
+    T1ha,
+    T1ha2,
+    Tiger,
+    Tiger2,
+    Whirlpool,
+    Xxh3,
+    Xxh64,
+    Xxh64TwoHash,
+    Xxh2_32,
+    Xxh2_64,
 );
 
 // === impl_bench_group_hash_file ===
 
 macro_rules! impl_bench_group_hash_file {
-    ($( ($name:expr, $ty:ident) ),*,) => {
+    ($( $ty:ident ),*,) => {
+        impl_bench_group_hash_file!(@ $( (stringify!($ty), $ty), )* );
+    };
+    (@ $( ($name:expr, $ty:ident) ),*,) => {
         paste::paste! {
             fn hash_file(c: &mut criterion::Criterion) {
                 let bufs = FILE_SIZES.iter().map(|&size| {
@@ -147,17 +157,57 @@ macro_rules! impl_bench_group_hash_file {
 }
 
 impl_bench_group_hash_file!(
-    ("t1ha2", T1ha2),
+    Adler32,
+    Adler32Rolling,
+    BeltHash,
+    Blake2b,
+    Blake2bSimd,
+    Blake2s,
+    Blake2sSimd,
+    Blake3,
+    Crc32Fast,
+    FarmHash,
+    Fnv,
+    Fsb256,
+    Fsb512,
+    FxHasher,
+    FxHasher32,
+    FxHasher64,
+    FxHasherRustc,
+    Groestl256,
+    Groestl512,
+    Md5,
+    MetroHash64,
+    MetroHash128,
+    Ripemd160,
+    Seahash,
+    Sha256,
+    Sha512,
+    Sha3_256,
+    Sha3_512,
+    Shabal512,
+    Siphash,
+    Sm3,
+    T1ha,
+    T1ha2,
+    Tiger,
+    Tiger2,
+    Whirlpool,
+    Xxh3,
+    Xxh64,
+    Xxh64TwoHash,
+    Xxh2_32,
+    Xxh2_64,
 );
 
 criterion::criterion_group!{
     name = benches;
     config = criterion::Criterion::default()
         .plotting_backend(criterion::PlottingBackend::Gnuplot)
-        //.sample_size(10)
-        //.warm_up_time(time::Duration::from_millis(1))
-        //.measurement_time(time::Duration::from_millis(1))
-        //.nresamples(1000)
+        .sample_size(SAMPLE_SIZE)
+        .warm_up_time(time::Duration::from_millis(WARM_UP_TIME_MILLIS))
+        .measurement_time(time::Duration::from_millis(MEASUREMENT_TIME_MILLIS))
+        .nresamples(NUMBER_OF_SAMPLES)
         .with_plots();
     targets = hash, hash_file
 }
