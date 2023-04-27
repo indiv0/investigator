@@ -38,7 +38,7 @@ fn main() {
     fn main() -> Result {
         cargo!(CHECK);
         cargo!(TEST);
-        cargo!(BENCH);
+        //cargo!(BENCH);
         cargo!(BUILD, RELEASE);
         Ok(())
     }
