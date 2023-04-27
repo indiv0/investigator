@@ -14,6 +14,7 @@ mod cargo;
 
 const CHECK: &str = "check";
 const TEST: &str = "test";
+#[allow(dead_code)]
 const BENCH: &str = "bench";
 const BUILD: &str = "build";
 const RELEASE: &str = "--release";

@@ -226,7 +226,6 @@ mod tests {
     // ============
 
     #[test]
-    #[ignore]
     fn test_unix_and_walkdir_are_identical() {
         let finder = find::Finder::default().path(MOCK_FIND_PATH);
         let unix = finder.clone().strategy(find::Strategy::Unix).find();
@@ -239,7 +238,6 @@ mod tests {
     // ============
 
     #[test]
-    #[ignore]
     fn test_hash() -> Result<(), io::Error> {
         let paths = crate::Lines::from_path(OUT_FILES)?;
         let _hashes = hash::main(&paths);
@@ -276,7 +274,6 @@ mod tests {
     // ===============
 
     #[test]
-    #[ignore]
     fn test_dup_dirs() {
         create_dir("out").unwrap();
         find();

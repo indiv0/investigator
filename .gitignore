@@ -1,5 +1,6 @@
 # investigator
 /investigator/benches/random_data
+/dupdir/out
 
 # rust/cargo
 /target
