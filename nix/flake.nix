@@ -45,13 +45,6 @@
 
                 libiconv
               ];
-
-              # Rust dependencies that require a C compiler always use the native compiler, but when
-              # compiling to `x86_64-unknown-linux-musl` they must use the cross compiler, otherwise
-              # they fail to compile.
-              #CC_x86_64_unknown_linux_musl =
-              #  with pkgs.pkgsCross.musl64.llvmPackages_latest.stdenv;
-              #  "${cc}/bin/${cc.targetPrefix}clang";
             }
           );
       });
