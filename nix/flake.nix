@@ -44,6 +44,9 @@
                 ### macOS-specific dependencies ###
 
                 libiconv
+                darwin.apple_sdk.frameworks.WebKit
+                darwin.apple_sdk.frameworks.CoreFoundation
+                darwin.apple_sdk.frameworks.Cocoa
               ];
             }
           );
