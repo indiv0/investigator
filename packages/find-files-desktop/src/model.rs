@@ -2,9 +2,11 @@
 // === FileItem ===
 // ================
 
+#[derive(Clone, Debug)]
 pub struct FileItem {
     pub id: u32,
     pub path: String,
+    pub file_name: String,
 }
 
 

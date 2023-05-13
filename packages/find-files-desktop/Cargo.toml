@@ -11,6 +11,8 @@ find-files = { path = "../find-files-core" }
 wasm-logger = { version = "0.2.0", default-features = false }
 wasm-bindgen = { version = "0.2.84", default-features = false }
 console_error_panic_hook = { version = "0.1.7", default-features = false }
-dioxus = { version = "0.3.2", default-features = false, features = ["hooks", "html", "macro"] }
-dioxus-desktop = { version = "0.3.0", default-features = false, features = ["tokio_runtime"] }
+dioxus = { git = "https://github.com/dioxuslabs/dioxus", default-features = false, features = ["hooks", "html", "macro"] }
+dioxus-desktop = { git = "https://github.com/dioxuslabs/dioxus", default-features = false, features = ["tokio_runtime"] }
 im-rc = { version = "15.1.0", default-features = false }
+tokio = { version = "1.28.1", default-features = false }
+fermi = { git = "https://github.com/dioxuslabs/dioxus" }

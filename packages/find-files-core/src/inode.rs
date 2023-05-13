@@ -55,8 +55,8 @@ pub(crate) const FIFO_INODE_TYPE: &str = "fifo";
 /// The type of an [`Inode`].
 ///
 /// [`Inode`]: crate::Inode
-#[derive(Clone, Copy, Debug)]
-pub(crate) enum InodeType {
+#[derive(Clone, Copy, Debug, sqlx::Type)]
+pub enum InodeType {
     /// A file.
     File,
     /// A directory.
@@ -74,23 +74,24 @@ pub(crate) enum InodeType {
 }
 
 
+// FIXME [NP]: remove
 // === Trait `impl`s ===
 
-impl rusqlite::ToSql for InodeType {
-    fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
-        let inode_type = match self {
-            InodeType::File => FILE_INODE_TYPE,
-            InodeType::Directory => DIRECTORY_INODE_TYPE,
-            InodeType::SymbolicLink => SYMBOLIC_LINK_INODE_TYPE,
-            InodeType::Socket => SOCKET_INODE_TYPE,
-            InodeType::BlockDevice => BLOCK_DEVICE_INODE_TYPE,
-            InodeType::CharDevice => CHAR_DEVICE_INODE_TYPE,
-            InodeType::Fifo => FIFO_INODE_TYPE,
-        };
-        let to_sql_output = inode_type.to_sql()?;
-        Ok(to_sql_output)
-    }
-}
+//impl rusqlite::ToSql for InodeType {
+//    fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
+//        let inode_type = match self {
+//            InodeType::File => FILE_INODE_TYPE,
+//            InodeType::Directory => DIRECTORY_INODE_TYPE,
+//            InodeType::SymbolicLink => SYMBOLIC_LINK_INODE_TYPE,
+//            InodeType::Socket => SOCKET_INODE_TYPE,
+//            InodeType::BlockDevice => BLOCK_DEVICE_INODE_TYPE,
+//            InodeType::CharDevice => CHAR_DEVICE_INODE_TYPE,
+//            InodeType::Fifo => FIFO_INODE_TYPE,
+//        };
+//        let to_sql_output = inode_type.to_sql()?;
+//        Ok(to_sql_output)
+//    }
+//}
 
 impl TryFrom<&str> for InodeType {
     type Error = anyhow::Error;
@@ -110,16 +111,17 @@ impl TryFrom<&str> for InodeType {
     }
 }
 
-impl rusqlite::types::FromSql for InodeType {
-    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
-        let value = value.as_str()?;
-        let inode_type = match Self::try_from(value) {
-            Ok(inode_type) => inode_type,
-            _ => return Err(rusqlite::types::FromSqlError::InvalidType),
-        };
-        Ok(inode_type)
-    }
-}
+// FIXME [NP]: remove
+//impl rusqlite::types::FromSql for InodeType {
+//    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
+//        let value = value.as_str()?;
+//        let inode_type = match Self::try_from(value) {
+//            Ok(inode_type) => inode_type,
+//            _ => return Err(rusqlite::types::FromSqlError::InvalidType),
+//        };
+//        Ok(inode_type)
+//    }
+//}
 
 
 
@@ -128,8 +130,9 @@ impl rusqlite::types::FromSql for InodeType {
 // =============
 
 /// A file or directory.
+// FIXME [NP]: rename all fields to simpler
 #[derive(Debug)]
-pub(crate) struct Inode {
+pub struct Inode {
     /// Path to this [`Inode`].
     ///
     /// [`Inode`]: crate::Inode

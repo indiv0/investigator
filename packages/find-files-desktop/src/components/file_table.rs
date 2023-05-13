@@ -25,12 +25,42 @@ fn file_entry<'a>(cx: Scope<'a, FileEntryProps<'a>>) -> Element {
     let file = _files.files.get(&cx.props.id)?;
 
     cx.render(rsx! {
-        li {
-            div {
-                label {
-                    r#for: "cbg-{file.id}",
-                    pointer_events: "none",
-                    "{file.path}"
+        //li {
+        //    div {
+        //        label {
+        //            r#for: "cbg-{file.id}",
+        //            pointer_events: "none",
+        //            "{file.path}"
+        //        }
+        //    }
+        //}
+        tr {
+            td {
+                class: "whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-white sm:pl-0",
+                "{file.file_name}"
+            }
+            td {
+                class: "whitespace-nowrap px-3 py-4 text-sm text-gray-300",
+                "Front-end Developer"
+            }
+            td {
+                class: "whitespace-nowrap px-3 py-4 text-sm text-gray-300",
+                "lindsay.walton@example.com"
+            }
+            td {
+                class: "whitespace-nowrap px-3 py-4 text-sm text-gray-300",
+                "Member"
+            }
+            td {
+                class: "relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0",
+                a {
+                    href: "#",
+                    class: "text-indigo-400 hover:text-indigo-300",
+                    "Edit"
+                    span {
+                        class: "sr-only",
+                        ", Lindsay Walton"
+                    }
                 }
             }
         }
@@ -61,6 +91,11 @@ pub fn file_table<'a>(cx: Scope<'a, FileTableProps<'a>>) -> Element {
     //let file_ids = files.read().files();
     //let file_ids = files.read();
     //let file_ids = file_ids.files();
+
+    //let mut file_ids = files
+    //    .iter()
+    //    .map(|(id, _)| *id)
+    //    .collect::<Vec<_>>();
 
     let file_list = files.read().files().into_iter().map(|id| {
         rsx!(file_entry {
@@ -142,36 +177,39 @@ pub fn file_table<'a>(cx: Scope<'a, FileTableProps<'a>>) -> Element {
                                         }
                                         tbody {
                                             class: "divide-y divide-gray-800",
-                                            tr {
-                                                td {
-                                                    class: "whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-white sm:pl-0",
-                                                    "Lindsay Walton"
-                                                }
-                                                td {
-                                                    class: "whitespace-nowrap px-3 py-4 text-sm text-gray-300",
-                                                    "Front-end Developer"
-                                                }
-                                                td {
-                                                    class: "whitespace-nowrap px-3 py-4 text-sm text-gray-300",
-                                                    "lindsay.walton@example.com"
-                                                }
-                                                td {
-                                                    class: "whitespace-nowrap px-3 py-4 text-sm text-gray-300",
-                                                    "Member"
-                                                }
-                                                td {
-                                                    class: "relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0",
-                                                    a {
-                                                        href: "#",
-                                                        class: "text-indigo-400 hover:text-indigo-300",
-                                                        "Edit"
-                                                        span {
-                                                            class: "sr-only",
-                                                            ", Lindsay Walton"
-                                                        }
-                                                    }
-                                                }
-                                            }
+                                            file_list
+                                            //file_ids.iter().map(|id| rsx!(file_entry( key: "{id}", id: *id )))
+                                            //file_entry {}
+                                            //tr {
+                                            //    td {
+                                            //        class: "whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-white sm:pl-0",
+                                            //        "Lindsay Walton"
+                                            //    }
+                                            //    td {
+                                            //        class: "whitespace-nowrap px-3 py-4 text-sm text-gray-300",
+                                            //        "Front-end Developer"
+                                            //    }
+                                            //    td {
+                                            //        class: "whitespace-nowrap px-3 py-4 text-sm text-gray-300",
+                                            //        "lindsay.walton@example.com"
+                                            //    }
+                                            //    td {
+                                            //        class: "whitespace-nowrap px-3 py-4 text-sm text-gray-300",
+                                            //        "Member"
+                                            //    }
+                                            //    td {
+                                            //        class: "relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0",
+                                            //        a {
+                                            //            href: "#",
+                                            //            class: "text-indigo-400 hover:text-indigo-300",
+                                            //            "Edit"
+                                            //            span {
+                                            //                class: "sr-only",
+                                            //                ", Lindsay Walton"
+                                            //            }
+                                            //        }
+                                            //    }
+                                            //}
                                         }
                                     }
                                 }

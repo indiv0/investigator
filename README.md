@@ -59,6 +59,12 @@ cat target/data/dup_dirs.txt | cut -d';' -f2 | xargs -d '\n' du -d0 | sort -n
 # Find Files Usages
 
 ```shell
+export PATH=~/.cargo/bin:$PATH
+cargo install sqlx-cli --no-default-features --features rustls,sqlite
+sqlx database create --database-url=sqlite:find-files.db
+#sqlx migrate add --source packages/find-files-core/migrations -r create_inodes_table
+sqlx migrate run --source packages/find-files-core/migrations
+#sqlx database drop --database-url=sqlite:find-files.db
 cargo install cargo-watch
 cargo install dioxus-cli
 ~/.cargo/bin/dioxus serve

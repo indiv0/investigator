@@ -15,7 +15,9 @@ use crate::html::write_html;
 
 mod html;
 mod inode;
-mod sql;
+//pub mod sql;
+pub mod sql2;
+pub use sql2 as sql;
 
 
 
@@ -67,7 +69,7 @@ const FIND_BY_INODE_TYPE_COMMAND: &str = "find_by_inode_type";
 const EXIT_COMMAND: &str = "exit";
 
 /// Name of the file used to store the database.
-const DATABASE_FILE: &str = "find-files.db";
+const DATABASE_FILE: &str = "sqlite:find-files.db";
 
 
 
@@ -77,13 +79,13 @@ const DATABASE_FILE: &str = "find-files.db";
 
 /// Arguments passed to the program.
 #[derive(Debug)]
-struct Args {
+pub struct Args {
     /// The directory to search in for files and directories.
-    search_directory: String,
+    pub search_directory: String,
     /// Name of the database file to use. If [`None`], then an in-memory database is used.
     ///
     /// [`None`]: std::option::Option::None
-    database_name: Option<String>,
+    pub database_name: Option<String>,
 }
 
 
@@ -91,7 +93,7 @@ struct Args {
 
 impl Args {
     /// Creates a new [`Args`] from the environment.
-    fn from_env() -> anyhow::Result<Self> {
+    pub fn from_env() -> anyhow::Result<Self> {
         let args = env::args();
         Args::parse(args)
     }
@@ -116,168 +118,169 @@ impl Args {
 // === Run ===
 // ===========
 
-pub fn run() -> anyhow::Result<()> {
-    let args = Args::from_env()?;
-    let mut database = sql::Database::new(args.database_name)?;
-
-    find_inodes(&mut database, &args.search_directory)?;
-
-    loop {
-        println!("Enter a command ({FIND_ALL_COMMAND} {FIND_BY_EXT_COMMAND}, {FIND_BY_DEPTH_COMMAND}, {FIND_BY_INODE_TYPE_COMMAND}, {EXIT_COMMAND}):");
-        let input = read_line()?;
-        let mut parser = CommandParser::from_str(&input)?;
-        let command = parser.parse_command()?;
-        let inodes = match command {
-            Command::FindAll => {
-                let find_inodes = || find_all(&mut database);
-                let (elapsed, inodes) = with_timer(find_inodes);
-                let inodes = inodes?;
-                let count = inodes.len();
-
-                let paths = {
-                    let inodes = inodes.iter();
-                    let strings = inodes.map(|inode| {
-                        let inode::Inode {
-                            path,
-                            file_extension,
-                            inode_type,
-                            depth,
-                            size,
-                            permissions,
-                            modified,
-                            accessed,
-                            created,
-                            file_name,
-                            file_stem,
-                        } = inode;
-                        format!("{path} ({file_extension:?}, {inode_type:?}, {depth}, {size}, {permissions:?}, {modified:?}, {accessed:?}, {created:?}, {file_name}, {file_stem:?})")
-                    });
-                    let strings = strings.collect::<Vec<String>>();
-                    strings.join(NEW_LINE)
-                };
-
-                println!("{paths}\nFound {count} files in {elapsed} seconds.");
-
-                inodes
-            }
-            Command::FindByFileExtensions { file_extensions } => {
-                let find_inodes = || find_inodes_by_file_extensions(&mut database, &file_extensions);
-                let (elapsed, inodes) = with_timer(find_inodes);
-                let inodes = inodes?;
-                let count = inodes.len();
-
-                let paths = {
-                    let inodes = inodes.iter();
-                    let paths = inodes.map(|inode| inode.path.as_str());
-                    let paths = paths.collect::<Vec<&str>>();
-                    paths.join(NEW_LINE)
-                };
-
-                println!("{paths}\nFound {count} files in {elapsed} seconds with the extensions {file_extensions:?}.");
-
-                inodes
-            },
-            Command::FindByDepth { depth } => {
-                let find_inodes = || find_inodes_by_depth(&mut database, depth);
-                let (elapsed, inodes) = with_timer(find_inodes);
-                let inodes = inodes?;
-                let count = inodes.len();
-
-                let paths = {
-                    let inodes = inodes.iter();
-                    let paths = inodes.map(|inode| inode.path.as_str());
-                    let paths = paths.collect::<Vec<&str>>();
-                    paths.join(NEW_LINE)
-                };
-
-                println!("{paths}\nFound {count} files in {elapsed} seconds with depth \"{depth:?}\".");
-
-                inodes
-            },
-            Command::FindByInodeType { inode_type } => {
-                let find_inodes = || find_inodes_by_type(&mut database, inode_type);
-                let (elapsed, inodes) = with_timer(find_inodes);
-                let inodes = inodes?;
-                let count = inodes.len();
-
-                let paths = {
-                    let inodes = inodes.iter();
-                    let paths = inodes.map(|inode| inode.path.as_str());
-                    let paths = paths.collect::<Vec<&str>>();
-                    paths.join(NEW_LINE)
-                };
-
-                println!("{paths}\nFound {count} files in {elapsed} seconds with type \"{inode_type:?}\".");
-
-                inodes
-            },
-            Command::Exit => break,
-        };
-
-        let html = html::html(inodes)?;
-        write_html(&html)?;
-    }
-    Ok(())
-}
+//pub fn run() -> anyhow::Result<()> {
+//    let args = Args::from_env()?;
+//    let mut database = sql::Database::new(DATABASE_FILE).await?;
+//
+//    find_inodes(&mut database, &args.search_directory)?;
+//
+//    loop {
+//        println!("Enter a command ({FIND_ALL_COMMAND} {FIND_BY_EXT_COMMAND}, {FIND_BY_DEPTH_COMMAND}, {FIND_BY_INODE_TYPE_COMMAND}, {EXIT_COMMAND}):");
+//        let input = read_line()?;
+//        let mut parser = CommandParser::from_str(&input)?;
+//        let command = parser.parse_command()?;
+//        let inodes = match command {
+//            //Command::FindAll => {
+//            //    let find_inodes = || find_all(&mut database);
+//            //    let (elapsed, inodes) = with_timer(find_inodes);
+//            //    let inodes = inodes?;
+//            //    let count = inodes.len();
+//
+//            //    let paths = {
+//            //        let inodes = inodes.iter();
+//            //        let strings = inodes.map(|inode| {
+//            //            let inode::Inode {
+//            //                path,
+//            //                file_extension,
+//            //                inode_type,
+//            //                depth,
+//            //                size,
+//            //                permissions,
+//            //                modified,
+//            //                accessed,
+//            //                created,
+//            //                file_name,
+//            //                file_stem,
+//            //            } = inode;
+//            //            format!("{path} ({file_extension:?}, {inode_type:?}, {depth}, {size}, {permissions:?}, {modified:?}, {accessed:?}, {created:?}, {file_name}, {file_stem:?})")
+//            //        });
+//            //        let strings = strings.collect::<Vec<String>>();
+//            //        strings.join(NEW_LINE)
+//            //    };
+//
+//            //    println!("{paths}\nFound {count} files in {elapsed} seconds.");
+//
+//            //    inodes
+//            //}
+//            //Command::FindByFileExtensions { file_extensions } => {
+//            //    let find_inodes = || find_inodes_by_file_extensions(&mut database, &file_extensions);
+//            //    let (elapsed, inodes) = with_timer(find_inodes);
+//            //    let inodes = inodes?;
+//            //    let count = inodes.len();
+//
+//            //    let paths = {
+//            //        let inodes = inodes.iter();
+//            //        let paths = inodes.map(|inode| inode.path.as_str());
+//            //        let paths = paths.collect::<Vec<&str>>();
+//            //        paths.join(NEW_LINE)
+//            //    };
+//
+//            //    println!("{paths}\nFound {count} files in {elapsed} seconds with the extensions {file_extensions:?}.");
+//
+//            //    inodes
+//            //},
+//            //Command::FindByDepth { depth } => {
+//            //    let find_inodes = || find_inodes_by_depth(&mut database, depth);
+//            //    let (elapsed, inodes) = with_timer(find_inodes);
+//            //    let inodes = inodes?;
+//            //    let count = inodes.len();
+//
+//            //    let paths = {
+//            //        let inodes = inodes.iter();
+//            //        let paths = inodes.map(|inode| inode.path.as_str());
+//            //        let paths = paths.collect::<Vec<&str>>();
+//            //        paths.join(NEW_LINE)
+//            //    };
+//
+//            //    println!("{paths}\nFound {count} files in {elapsed} seconds with depth \"{depth:?}\".");
+//
+//            //    inodes
+//            //},
+//            //Command::FindByInodeType { inode_type } => {
+//            //    let find_inodes = || find_inodes_by_type(&mut database, inode_type);
+//            //    let (elapsed, inodes) = with_timer(find_inodes);
+//            //    let inodes = inodes?;
+//            //    let count = inodes.len();
+//
+//            //    let paths = {
+//            //        let inodes = inodes.iter();
+//            //        let paths = inodes.map(|inode| inode.path.as_str());
+//            //        let paths = paths.collect::<Vec<&str>>();
+//            //        paths.join(NEW_LINE)
+//            //    };
+//
+//            //    println!("{paths}\nFound {count} files in {elapsed} seconds with type \"{inode_type:?}\".");
+//
+//            //    inodes
+//            //},
+//            Command::Exit => break,
+//        };
+//
+//        let html = html::html(inodes)?;
+//        write_html(&html)?;
+//    }
+//    Ok(())
+//}
 
 /// Sets up the database by performing the initial search.
-fn find_inodes(database: &mut sql::Database, search_directory: &str) -> anyhow::Result<()> {
-    if database.inodes().count()? > 0 {
-        return Ok(());
-    }
+pub async fn find_inodes(database: &sql::Database, search_directory: &str) -> anyhow::Result<()> {
+    // FIXME [NP]: re-add this optimization.
+    //if database.inodes().count()? > 0 {
+    //    return Ok(());
+    //}
 
     let inodes = inode::Inode::from_search_directory(search_directory)?;
-    database.inodes().insert_many(&inodes)?;
+    database.insert_inodes(inodes).await?;
     Ok(())
 }
 
-/// Finds all [`Inode`]s.
-fn find_all(database: &mut sql::Database) -> anyhow::Result<Vec<inode::Inode>> {
-    let query = database.inodes();
-    let query = query.select();
-    let inodes = query.all()?;
-    Ok(inodes)
-}
+///// Finds all [`Inode`]s.
+//pub fn find_all(database: &mut sql::Database) -> anyhow::Result<Vec<inode::Inode>> {
+//    let query = database.inodes();
+//    let query = query.select();
+//    let inodes = query.all()?;
+//    Ok(inodes)
+//}
 
-/// Find all [`Inode`]s that match the given `depth`.
-///
-/// [`Inode`]: crate::inode::Inode
-// FIXME [NP]: Find a way to do this in one query.
-fn find_inodes_by_depth(database: &mut sql::Database, depth: usize) -> anyhow::Result<Vec<inode::Inode>> {
-    let query = database.inodes();
-    let query = query.select();
-    let inodes = query.equals(sql::schema::inodes::Field::Depth, &depth)?;
-    Ok(inodes)
-}
+///// Find all [`Inode`]s that match the given `depth`.
+/////
+///// [`Inode`]: crate::inode::Inode
+//// FIXME [NP]: Find a way to do this in one query.
+//fn find_inodes_by_depth(database: &mut sql::Database, depth: usize) -> anyhow::Result<Vec<inode::Inode>> {
+//    let query = database.inodes();
+//    let query = query.select();
+//    let inodes = query.equals(sql::schema::inodes::Field::Depth, &depth)?;
+//    Ok(inodes)
+//}
 
-/// Find all [`Inode`]s that match the given [`InodeType`].
-///
-/// [`Inode`]: crate::inode::Inode
-/// [`InodeType`]: crate::inode::InodeType
-// FIXME [NP]: Find a way to do this in one query.
-fn find_inodes_by_type(database: &mut sql::Database, inode_type: inode::InodeType) -> anyhow::Result<Vec<inode::Inode>> {
-    let query = database.inodes();
-    let query = query.select();
-    let inodes = query.equals(sql::schema::inodes::Field::InodeType, &inode_type)?;
-    Ok(inodes)
-}
-
-/// Find all [`Inode`]s that match the given `file_extension`.
-///
-/// [`Inode`]: crate::inode::Inode
-// FIXME [NP]: Find a way to do this in one query.
-fn find_inodes_by_file_extensions(database: &mut sql::Database, file_extensions: &Vec<String>) -> anyhow::Result<Vec<inode::Inode>> {
-    let mut all_inodes = Vec::new();
-    for file_extension in file_extensions {
-        let query = database.inodes();
-        let query = query.select();
-        let inodes = query.r#match(sql::schema::inodes::Field::FileExtension, file_extension)?;
-        all_inodes.extend(inodes);
-    }
-    // FIXME [NP]: This is a very expensive way to sort, find a way to do so in SQL or with slices.
-    all_inodes.sort_by_key(|inode| inode.path.clone());
-    Ok(all_inodes)
-}
+///// Find all [`Inode`]s that match the given [`InodeType`].
+/////
+///// [`Inode`]: crate::inode::Inode
+///// [`InodeType`]: crate::inode::InodeType
+//// FIXME [NP]: Find a way to do this in one query.
+//fn find_inodes_by_type(database: &mut sql::Database, inode_type: inode::InodeType) -> anyhow::Result<Vec<inode::Inode>> {
+//    let query = database.inodes();
+//    let query = query.select();
+//    let inodes = query.equals(sql::schema::inodes::Field::InodeType, &inode_type)?;
+//    Ok(inodes)
+//}
+//
+///// Find all [`Inode`]s that match the given `file_extension`.
+/////
+///// [`Inode`]: crate::inode::Inode
+//// FIXME [NP]: Find a way to do this in one query.
+//fn find_inodes_by_file_extensions(database: &mut sql::Database, file_extensions: &Vec<String>) -> anyhow::Result<Vec<inode::Inode>> {
+//    let mut all_inodes = Vec::new();
+//    for file_extension in file_extensions {
+//        let query = database.inodes();
+//        let query = query.select();
+//        let inodes = query.r#match(sql::schema::inodes::Field::FileExtension, file_extension)?;
+//        all_inodes.extend(inodes);
+//    }
+//    // FIXME [NP]: This is a very expensive way to sort, find a way to do so in SQL or with slices.
+//    all_inodes.sort_by_key(|inode| inode.path.clone());
+//    Ok(all_inodes)
+//}
 
 
 
