@@ -975,12 +975,19 @@ name = "find-files"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "rusqlite",
+ "walkdir",
+]
+
+[[package]]
+name = "find-files-desktop"
+version = "0.1.0"
+dependencies = [
  "console_error_panic_hook",
  "dioxus",
  "dioxus-desktop",
+ "find-files",
  "im-rc",
- "rusqlite",
- "walkdir",
  "wasm-bindgen",
  "wasm-logger",
 ]

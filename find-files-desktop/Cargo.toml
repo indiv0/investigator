@@ -1,0 +1,16 @@
+[package]
+name = "find-files-desktop"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+find-files = { path = "../find-files" }
+#anyhow = { version = "1.0.71", default-features = false, features = ["std"] }
+wasm-logger = { version = "0.2.0", default-features = false }
+wasm-bindgen = { version = "0.2.84", default-features = false }
+console_error_panic_hook = { version = "0.1.7", default-features = false }
+dioxus = { version = "0.3.2", default-features = false, features = ["hooks", "html", "macro"] }
+dioxus-desktop = { version = "0.3.0", default-features = false, features = ["tokio_runtime"] }
+im-rc = { version = "15.1.0", default-features = false }

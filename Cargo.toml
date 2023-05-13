@@ -2,6 +2,7 @@
 members = [
     "dupdir",
     "find-files",
+    "find-files-desktop",
     "investigator",
     "utils",
 ]
