@@ -2,16 +2,16 @@
 /find-files.db
 
 # investigator
-/investigator/benches/random_data
-/dupdir/out
+/packages/investigator/benches/random_data
+/packages/dupdir/out
 
 # rust/cargo
 /target
 
 # created by rust-analyzer extension of vscode
 /rust-analyzer-target
-/investigator/rust-analyzer-target
-/dupdir/rust-analyzer-target
+/packages/investigator/rust-analyzer-target
+/packages/dupdir/rust-analyzer-target
 
 # macOS
 /.DS_Store

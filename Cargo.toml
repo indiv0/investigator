@@ -1,8 +1,8 @@
 [workspace]
 members = [
-    "dupdir",
-    "find-files",
-    "find-files-desktop",
-    "investigator",
-    "utils",
+    "packages/dupdir",
+    "packages/find-files",
+    "packages/find-files-desktop",
+    "packages/investigator",
+    "packages/utils",
 ]
