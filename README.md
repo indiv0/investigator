@@ -64,7 +64,7 @@ cargo install dioxus-cli
 ~/.cargo/bin/dioxus serve
 ~/.cargo/bin/dioxus build --release
 rm -f find-files.db
-~/.cargo/bin/cargo-watch -s "cargo test --package find-files && cargo run --release --package find-files ~/Desktop/files"
+make run-find-files
 > find_by_ext tif,tiff,bmp,jpg,jpeg,gif,png
 ```
 

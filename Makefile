@@ -32,6 +32,11 @@ post-dependencies:
 run:
 	cargo run --package utils
 
+# Runs the find-files desktop app.
+.PHONY: run-find-files
+run-find-files:
+	(cd packages/find-files-desktop && cargo run --release --package find-files-desktop ~/Desktop/files)
+
 # Continually rebuilds the project.
 .PHONY: watch
 watch:

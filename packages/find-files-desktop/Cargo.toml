@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-find-files = { path = "../find-files" }
+find-files = { path = "../find-files-core" }
 #anyhow = { version = "1.0.71", default-features = false, features = ["std"] }
 wasm-logger = { version = "0.2.0", default-features = false }
 wasm-bindgen = { version = "0.2.84", default-features = false }
