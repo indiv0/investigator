@@ -1,8 +1,16 @@
 [workspace]
 members = [
+    "packages/crates/core",
+    "packages/crates/tests",
     "packages/dupdir",
     "packages/find-files-core",
     "packages/find-files-desktop",
     "packages/investigator",
     "packages/utils",
 ]
+
+[workspace.dependencies]
+find_files_core.path = "packages/crates/core"
+model = { version = "0.1.2", default-features = false }
+pretty_assertions = { version = "1.4.0", features = ["std"], default-features = false }
+walkdir = { version = "2.4.0", default-features = false}

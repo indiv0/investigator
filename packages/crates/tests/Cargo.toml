@@ -1,0 +1,14 @@
+[package]
+name = "find_files_tests"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+test = false
+doctest = false
+
+[dev-dependencies]
+find_files_core.workspace = true
+model.workspace = true
+pretty_assertions.workspace = true
+walkdir.workspace = true
