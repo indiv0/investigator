@@ -1,5 +1,5 @@
 [package]
-name = "investigator"
+name = "hashes"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,7 +7,7 @@ edition = "2021"
 doctest = false
 
 [[bin]]
-name = "investigator"
+name = "hashes"
 test = false
 
 [dependencies]
@@ -146,3 +146,4 @@ hash-Xxh2_64 = ["xxhash2"]
 hash-Xxh3 = ["xxhash-rust/xxh3"]
 hash-Xxh64 = ["xxhash-rust/xxh64"]
 hash-Xxh64TwoHash = ["twox-hash"]
+

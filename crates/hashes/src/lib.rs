@@ -1,4 +1,4 @@
-use std::hash::Hasher as TRAIT_Hasher;
+use std::hash::Hasher as _;
 use std::io;
 
 
@@ -267,3 +267,4 @@ impl_hash!(Xxh64,                 8,  xxhash_rust::xxh64::Xxh64, std_hasher_per_
 impl_hash!(Xxh64TwoHash,          8,  twox_hash::XxHash64,       std_hasher_per_byte,          );
 impl_hash!(T1ha2,                 8,  t1ha::T1ha2Hasher,         std_hasher,                   );
 impl_hash!(Adler32Rolling,        4,  adler32::RollingAdler32,   rolling_adler32,              );
+

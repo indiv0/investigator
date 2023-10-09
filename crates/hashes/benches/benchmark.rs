@@ -1,6 +1,6 @@
-use rand::RngCore as TRAIT_RngCore;
+use rand::RngCore as _;
 use std::fs;
-use std::io::Write as TRAIT_Write;
+use std::io::Write as _;
 use std::time;
 
 
@@ -49,9 +49,9 @@ macro_rules! impl_bench_group_hash {
                         b.iter(|| {
                             let mut buf = criterion::black_box(buf);
                             let mut reader = &mut buf;
-                            let mut hasher = investigator::$ty::default();
-                            investigator::Hasher::update(&mut hasher, criterion::black_box(&mut reader));
-                            investigator::Hasher::finish(hasher)
+                            let mut hasher = hashes::$ty::default();
+                            hashes::Hasher::update(&mut hasher, criterion::black_box(&mut reader));
+                            hashes::Hasher::finish(hasher)
                         })
                     });
                     )*
@@ -121,7 +121,7 @@ macro_rules! impl_bench_group_hash_file {
                     buf
                 }).collect::<Vec<_>>();
 
-                let tmp_dir = tempdir::TempDir::new("investigator").unwrap();
+                let tmp_dir = tempdir::TempDir::new("hashes").unwrap();
 
                 let files = bufs.iter().zip(FILE_SIZES.iter()).map(|(buf, &size)| {
                     let path = tmp_dir.path().join(format!("{size}"));
@@ -140,12 +140,12 @@ macro_rules! impl_bench_group_hash_file {
                         b.iter(|| {
                             let path = criterion::black_box(path);
                             let mut reader = fs::File::open(path).unwrap();
-                            let mut hasher = investigator::$ty::default();
-                            investigator::copy_wide(
+                            let mut hasher = hashes::$ty::default();
+                            hashes::copy_wide(
                                 criterion::black_box(&mut reader),
                                 criterion::black_box(&mut hasher),
                             ).unwrap();
-                            investigator::Hasher::finish(hasher)
+                            hashes::Hasher::finish(hasher)
                         })
                     });
                     )*

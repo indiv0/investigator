@@ -1,14 +1,14 @@
-# investigator
-/packages/investigator/benches/random_data
-/packages/dupdir/out
+# hashes
+/crates/hashes/benches/hello_world
+/crates/dupdir_tests/out
 
 # rust/cargo
 /target
 
 # created by rust-analyzer extension of vscode
 /rust-analyzer-target
-/packages/investigator/rust-analyzer-target
-/packages/dupdir/rust-analyzer-target
+/crates/dupdir/rust-analyzer-target
+/crates/hashes/rust-analyzer-target
 
 # macOS
 /.DS_Store

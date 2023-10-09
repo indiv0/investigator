@@ -3,9 +3,12 @@ name = "dupdir"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+doctest = false
+
 [dependencies]
 hex.workspace = true
 indicatif.workspace = true
-investigator.workspace = true
+hashes.workspace = true
 rayon.workspace = true
 walkdir.workspace = true

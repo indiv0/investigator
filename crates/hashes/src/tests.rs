@@ -108,3 +108,4 @@ impl_test!(Xxh64, "f58336a78b6f9476");
 impl_test!(Xxh64TwoHash, "f58336a78b6f9476");
 impl_test!(Xxh2_32, "31b7405d");
 impl_test!(Xxh2_64, "f58336a78b6f9476");
+

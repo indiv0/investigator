@@ -1,0 +1,12 @@
+[package]
+name = "dupdir_cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "dupdir_cli"
+test = false
+
+[dependencies]
+dupdir.workspace = true
+indicatif.workspace = true
