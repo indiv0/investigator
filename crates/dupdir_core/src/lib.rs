@@ -29,38 +29,7 @@ pub use dup_dirs::main as run_dup_dirs;
 pub use find::main as run_find;
 pub use hash::main as run_hash;
 
-// ===============
-// === Command ===
-// ===============
 
-#[derive(Debug)]
-enum Command {
-    Find,
-    Hash,
-    DirFiles,
-    DirHashes,
-    DupDirs,
-    All,
-}
-
-// === Trait `impl`s ===
-
-impl str::FromStr for Command {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let command = match s {
-            "find" => Self::Find,
-            "hash" => Self::Hash,
-            "dir_files" => Self::DirFiles,
-            "dir_hashes" => Self::DirHashes,
-            "dup_dirs" => Self::DupDirs,
-            "all" => Self::All,
-            _ => Err(format!("Invalid command: {s}"))?,
-        };
-        Ok(command)
-    }
-}
 
 // =============
 // === Lines ===
