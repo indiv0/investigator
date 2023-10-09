@@ -3,7 +3,17 @@ name = "investigator"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+doctest = false
+
+[[bin]]
+name = "investigator"
+test = false
+
 [dependencies]
+hex.workspace = true
+paste.workspace = true
+
 adler = { optional = true, version = "1.0.2" }
 adler32 = { optional = true, version = "1.2.0" }
 belt-hash = { optional = true, version = "0.1.0" }
@@ -18,11 +28,9 @@ fnv = { optional = true, version = "1.0.7" }
 fsb = { optional = true, version = "0.1.3" }
 fxhash = { optional = true, version = "0.2.1" }
 groestl = { optional = true, version = "0.10.1" }
-hex = "0.4.3"
 k12 = { optional = true, version = "0.2.1" }
 md-5 = { optional = true, version = "0.10.5" }
 metrohash = { optional = true, version = "1.0.6" }
-paste = "1.0.12"
 ripemd = { optional = true, version = "0.1.3" }
 rustc-hash = { optional = true, version = "1.1.0" }
 seahash = { optional = true, version = "4.1.0" }
@@ -40,9 +48,9 @@ xxhash-rust = { optional = true, version = "0.8.6" }
 xxhash2 = { optional = true, version = "0.1.0" }
 
 [dev-dependencies]
-criterion = "0.4.0"
-rand = "0.8.5"
-tempdir = "0.3.7"
+criterion.workspace = true
+rand.workspace = true
+tempdir.workspace = true
 
 [[bench]]
 name = "benchmark"
