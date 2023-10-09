@@ -1,0 +1,9 @@
+[package]
+name = "find_files_cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+find_files_core.workspace = true
+find_files_shell.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread"] }

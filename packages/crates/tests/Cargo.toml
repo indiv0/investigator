@@ -7,8 +7,11 @@ edition = "2021"
 test = false
 doctest = false
 
+[dependencies]
+fastrand.workspace = true
+
 [dev-dependencies]
 find_files_core.workspace = true
+find_files_shell.workspace = true
 model.workspace = true
 pretty_assertions.workspace = true
-walkdir.workspace = true
