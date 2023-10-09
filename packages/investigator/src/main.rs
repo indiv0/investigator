@@ -1,4 +1,6 @@
-use investigator::Hasher as TRAIT_Hasher;
+use core::str;
+use core::str::FromStr as _;
+use investigator::Hasher as _;
 use std::env;
 use std::fs;
 use std::io;
@@ -37,36 +39,77 @@ impl<'a> Input<'a> {
         };
         Ok(input)
     }
+
+    fn hash(&mut self, algorithm: Algorithm) -> io::Result<(Vec<u8>, &str)> {
+        match self {
+            Self::Stdin { path, stdin } => {
+                let mut stdin = stdin.lock();
+                let hash = algorithm.hash(&mut stdin)?;
+                Ok((hash, path))
+            },
+            Self::File { path, file } => {
+                let hash = algorithm.hash(file)?;
+                Ok((hash, path))
+            },
+        }
+    }
 }
 
-// === impl_hash ===
 
-macro_rules! impl_hash {
+
+// =======================
+// === impl_algorithms ===
+// =======================
+
+macro_rules! impl_algorithms {
     ($( $ident:ident ),*,) => {
         paste::paste! {
-            impl<'a> Input<'a> {
-                fn hash(&mut self, algorithm: &str) -> io::Result<(Vec<u8>, &str)> {
-                    match algorithm {
+            // =================
+            // === Algorithm ===
+            // =================
+
+            #[derive(Clone, Copy, Debug)]
+            #[must_use]
+            enum Algorithm {
+            $(
+                #[cfg(feature = "hash-" $ident)]
+                $ident,
+            )*
+            }
+
+
+            // === Internal `impl`s ===
+
+            impl Algorithm {
+                fn hash(&self, reader: &mut impl io::Read) -> io::Result<Vec<u8>> {
+                    match self {
                     $(
                         #[cfg(feature = "hash-" $ident)]
-                        stringify!([<$ident:snake:lower>]) => {
+                        Self::$ident => {
                             let mut hasher = investigator::$ident::default();
-                            match self {
-                                Self::Stdin { path, stdin } => {
-                                    let mut stdin = stdin.lock();
-                                    investigator::copy_wide(&mut stdin , &mut hasher)?;
-                                    let hash = hasher.finish().to_vec();
-                                    Ok((hash, path))
-                                },
-                                Self::File { path, file } => {
-                                    investigator::copy_wide(file, &mut hasher)?;
-                                    let hash = hasher.finish().to_vec();
-                                    Ok((hash, path))
-                                },
-                            }
+                            investigator::copy_wide(reader, &mut hasher)?;
+                            let hash = hasher.finish();
+                            let hash = hash.to_vec();
+                            Ok(hash)
                         },
                     )*
-                        _ => panic!("Unknown algorithm: {algorithm}"),
+                    }
+                }
+            }
+
+
+            // === Trait `impl`s ===
+
+            impl str::FromStr for Algorithm {
+                type Err = String;
+
+                fn from_str(s: &str) -> Result<Self, Self::Err> {
+                    match s {
+                    $(
+                        #[cfg(feature = "hash-" $ident)]
+                        stringify!([<$ident:snake:lower>]) => Ok(Self::$ident),
+                    )*
+                        _ => Err(format!("Unknown algorithm: \"{s}\".")),
                     }
                 }
             }
@@ -74,7 +117,7 @@ macro_rules! impl_hash {
     }
 }
 
-impl_hash!(
+impl_algorithms!(
     Adler32,
     Adler32Rolling,
     BeltHash,
@@ -126,10 +169,11 @@ impl_hash!(
 
 fn main() {
     let algorithm = env::args().nth(1).unwrap();
+    let algorithm = Algorithm::from_str(&algorithm).unwrap();
     let path = env::args().nth(2);
     let path = path.as_deref();
     let mut input = Input::new(path).unwrap();
-    let (hash, path) = input.hash(&algorithm).unwrap();
+    let (hash, path) = input.hash(algorithm).unwrap();
     let hash = hex::encode(hash);
     println!("{hash}  {path}");
 }
