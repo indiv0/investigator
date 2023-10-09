@@ -5,21 +5,13 @@ use std::env;
 use std::fs;
 use std::io;
 
-
-
 // =============
 // === Input ===
 // =============
 
 enum Input<'a> {
-    Stdin {
-        path: &'a str,
-        stdin: io::Stdin,
-    },
-    File {
-        path: &'a str,
-        file: fs::File,
-    },
+    Stdin { path: &'a str, stdin: io::Stdin },
+    File { path: &'a str, file: fs::File },
 }
 
 // === Main `impl` ===
@@ -31,7 +23,7 @@ impl<'a> Input<'a> {
             "-" => {
                 let stdin = io::stdin();
                 Self::Stdin { path, stdin }
-            },
+            }
             path => {
                 let file = fs::File::open(path)?;
                 Self::File { path, file }
@@ -46,16 +38,14 @@ impl<'a> Input<'a> {
                 let mut stdin = stdin.lock();
                 let hash = algorithm.hash(&mut stdin)?;
                 Ok((hash, path))
-            },
+            }
             Self::File { path, file } => {
                 let hash = algorithm.hash(file)?;
                 Ok((hash, path))
-            },
+            }
         }
     }
 }
-
-
 
 // =======================
 // === impl_algorithms ===
@@ -160,8 +150,6 @@ impl_algorithms!(
     Xxh2_32,
     Xxh2_64,
 );
-
-
 
 // ============
 // === main ===

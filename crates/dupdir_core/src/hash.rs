@@ -1,7 +1,7 @@
 use dupdir_hash::Hasher as _;
 use indicatif::ParallelProgressIterator as _;
-use rayon::iter::ParallelIterator as _;
 use rayon::iter::IntoParallelIterator as _;
+use rayon::iter::ParallelIterator as _;
 use rayon::prelude::IndexedParallelIterator;
 use std::fs;
 use std::str;
@@ -31,21 +31,16 @@ impl<'a> Hasher<'a> {
         self.paths.verify_paths();
         let crate::Lines(paths) = self.paths;
         let skip = self.skip.unwrap_or(0);
-        let hashes_and_paths = paths
-            .into_par_iter()
-            .skip(skip)
-            .progress()
-            .map(|path| {
-                let hash = hash_path(path);
-                format!("{hash}  {path}")
-            });
+        let hashes_and_paths = paths.into_par_iter().skip(skip).progress().map(|path| {
+            let hash = hash_path(path);
+            format!("{hash}  {path}")
+        });
         hashes_and_paths.collect::<Vec<_>>()
     }
 }
 
 fn hash_path(path: &str) -> String {
-    let mut file =
-        fs::File::open(path).unwrap_or_else(|_| panic!("Failed to open file: {path:?}"));
+    let mut file = fs::File::open(path).unwrap_or_else(|_| panic!("Failed to open file: {path:?}"));
     let mut hasher = dupdir_hash::T1ha2::default();
     dupdir_hash::copy_wide(&mut file, &mut hasher).expect("Failed to hash file");
     let hash = hasher.finish().to_vec();

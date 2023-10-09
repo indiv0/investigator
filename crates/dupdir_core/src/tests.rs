@@ -4,8 +4,6 @@ use crate::find;
 use crate::hash;
 use std::io;
 
-
-
 // =================
 // === Constants ===
 // =================
@@ -16,8 +14,6 @@ const MOCK_FIND_PATH: &str = "src";
 const OUT_FILES: &str = "out/files.txt";
 const OUT_HASHES: &str = "out/hashes.txt";
 const OUT_DIR_FILES: &str = "out/dir_files.txt";
-
-
 
 // ============
 // === Find ===
@@ -31,8 +27,6 @@ fn test_unix_and_walkdir_are_identical() {
     assert_eq!(unix, walk_dir);
 }
 
-
-
 // ============
 // === Hash ===
 // ============
@@ -45,8 +39,6 @@ fn test_hash() -> Result<(), io::Error> {
     Ok(())
 }
 
-
-
 // ================
 // === DirFiles ===
 // ================
@@ -58,8 +50,6 @@ fn test_dir_files() -> Result<(), io::Error> {
     let _dir_files = dir_files::main(&files);
     Ok(())
 }
-
-
 
 // =================
 // === DirHashes ===

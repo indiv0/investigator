@@ -3,8 +3,6 @@ use std::fs;
 use std::io::Write as _;
 use std::time;
 
-
-
 // =================
 // === Constants ===
 // =================
@@ -17,8 +15,6 @@ const WARM_UP_TIME_MILLIS: u64 = 100; // Defaults to 3000
 const MEASUREMENT_TIME_MILLIS: u64 = 1000; // Defaults to 10000?
 const SAMPLE_SIZE: usize = 10; // Defaults to 1000?
 const NUMBER_OF_SAMPLES: usize = 10; // Defaults to 100
-
-
 
 // ==================
 // === Benchmarks ===
@@ -200,7 +196,7 @@ impl_bench_group_hash_file!(
     Xxh2_64,
 );
 
-criterion::criterion_group!{
+criterion::criterion_group! {
     name = benches;
     config = criterion::Criterion::default()
         .plotting_backend(criterion::PlottingBackend::Gnuplot)

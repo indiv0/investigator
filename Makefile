@@ -32,9 +32,14 @@ post-dependencies:
 # Checks, tests, and builds project.
 .PHONY: run
 run:
-	$(CARGO) check
+	$(CARGO) clippy
 	$(CARGO) test
 	$(CARGO) build --release
+
+# Formats the project.
+.PHONY: fmt
+fmt:
+	$(CARGO) fmt
 
 # Runs benchmarks.
 .PHONY: bench

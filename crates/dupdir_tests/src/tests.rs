@@ -1,9 +1,8 @@
-use std::io::Write as _;
 use std::env;
 use std::fs;
 use std::io;
+use std::io::Write as _;
 use std::process;
-
 
 // =================
 // === Constants ===
@@ -15,8 +14,6 @@ const OUT_DIR_FILES: &str = "out/dir_files.txt";
 const OUT_DIR_HASHES: &str = "out/dir_hashes.txt";
 const OUT_DUP_DIRS: &str = "out/dup_dirs.txt";
 const OUT_ALL: &str = "out/all.txt";
-
-
 
 // ===============
 // === DupDirs ===
@@ -58,8 +55,6 @@ fn dup_dirs() {
     let args = format!("dup_dirs {OUT_DIR_HASHES}");
     cargo_run_command(&args, Some(OUT_DUP_DIRS));
 }
-
-
 
 // ===========
 // === All ===

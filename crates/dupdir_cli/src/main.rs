@@ -5,8 +5,6 @@ use std::env;
 use std::error;
 use std::io;
 
-
-
 // ===============
 // === Command ===
 // ===============
@@ -20,7 +18,6 @@ enum Command {
     DupDirs,
     All,
 }
-
 
 // === Trait `impl`s ===
 
@@ -40,8 +37,6 @@ impl str::FromStr for Command {
         Ok(command)
     }
 }
-
-
 
 // ============
 // === Main ===
@@ -87,7 +82,7 @@ fn main() {
                 let dir_files = dupdir_core::run_dir_files(&files);
                 let dir_hashes = dupdir_core::run_dir_hashes(&dir_files, &hashes);
                 dupdir_core::run_dup_dirs(&dir_hashes)
-            },
+            }
         };
         // Write the resulting strings to stdout.
         let mut writer = stdout_writer();
@@ -111,10 +106,7 @@ fn stdout_writer() -> io::StdoutLock<'static> {
     stdout.lock()
 }
 
-fn write_output(
-    writer: &mut dyn io::Write,
-    strings: Vec<String>,
-) -> Result<(), io::Error> {
+fn write_output(writer: &mut dyn io::Write, strings: Vec<String>) -> Result<(), io::Error> {
     let strings = strings.iter();
     let strings = strings.progress();
     let strings = strings.map(|string| writeln!(writer, "{string}"));

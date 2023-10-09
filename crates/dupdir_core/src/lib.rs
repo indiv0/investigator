@@ -1,18 +1,15 @@
 use dupdir_hash::Hasher as _;
-use std::io;
-use std::path;
 use std::fs;
+use std::io;
 use std::io::BufRead as _;
+use std::path;
 use std::str;
-
 
 // =================
 // === Constants ===
 // =================
 
 const UNIQUE_SEPARATOR: &str = "    ";
-
-
 
 // ==============
 // === Export ===
@@ -32,8 +29,6 @@ pub use dup_dirs::main as run_dup_dirs;
 pub use find::main as run_find;
 pub use hash::main as run_hash;
 
-
-
 // ===============
 // === Command ===
 // ===============
@@ -47,7 +42,6 @@ enum Command {
     DupDirs,
     All,
 }
-
 
 // === Trait `impl`s ===
 
@@ -68,15 +62,12 @@ impl str::FromStr for Command {
     }
 }
 
-
-
 // =============
 // === Lines ===
 // =============
 
 #[derive(Debug, Default)]
 pub struct Lines(pub Vec<String>);
-
 
 // === Main `impl` ===
 
@@ -95,7 +86,6 @@ impl Lines {
         });
     }
 }
-
 
 // === Trait `impls` ===
 
@@ -135,4 +125,3 @@ fn assert_path_rules(p: &str) {
 fn path_to_str(p: &path::Path) -> &str {
     p.to_str().expect("Path should be valid UTF-8")
 }
-
