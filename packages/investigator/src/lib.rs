@@ -153,10 +153,10 @@ macro_rules! impl_rust_crypto_hash_extendable {
 
                 #[cfg(feature = "hash-" $ident)]
                 #[derive(Default)]
-                pub struct $ident($inner);
+                pub struct $ident<'a>($inner<'a>);
 
                 #[cfg(feature = "hash-" $ident)]
-                impl Hasher<[<$ident:snake:upper _DIGEST_SIZE>]> for $ident {
+                impl Hasher<[<$ident:snake:upper _DIGEST_SIZE>]> for $ident<'_> {
                     #[inline]
                     fn update(&mut self, data: &[u8]) {
                         $digest::update(&mut self.0, data);
@@ -340,7 +340,7 @@ mod test {
     // =================
 
     macro_rules! impl_test {
-        ($ty:ident, $expected:expr) => {
+        ($ty:ident $(<'_>)?, $expected:expr) => {
             paste::paste! {
                 #[cfg(feature = "hash-" $ty)]
                 mod [<$ty:snake:lower>] {
@@ -389,8 +389,8 @@ mod test {
     impl_test!(FxHasherRustc, "562dc0284e81dff2");
     impl_test!(Groestl256, "63e4ab2044e38c1fb1725313f2229e038926af839c86eaf96553027d2c851e18");
     impl_test!(Groestl512, "b60658e723a8eb1743823a8002175486bc24223ba3dc6d8cb435a948f6d2b9744ac9e307e1d38021ea18c4d536d28fc23491d7771a5a5b0d02ffad9a073dcc28");
-    impl_test!(KangarooTwelve256, "2a7eccaa09ff7e30cb1413bda28dad7f90759f22fc63535369bf17595b1166af");
-    impl_test!(KangarooTwelve512, "2a7eccaa09ff7e30cb1413bda28dad7f90759f22fc63535369bf17595b1166af5d6edd1b483c5eee16d5291ac37c454ff1f26d8ce176a7c73a79232e5b2e402f");
+    impl_test!(KangarooTwelve256<'_>, "2a7eccaa09ff7e30cb1413bda28dad7f90759f22fc63535369bf17595b1166af");
+    impl_test!(KangarooTwelve512<'_>, "2a7eccaa09ff7e30cb1413bda28dad7f90759f22fc63535369bf17595b1166af5d6edd1b483c5eee16d5291ac37c454ff1f26d8ce176a7c73a79232e5b2e402f");
     impl_test!(Md5, "6cd3556deb0da54bca060b4c39479839");
     impl_test!(MetroHash128, "5930f69e4971f2c0");
     impl_test!(MetroHash64, "fc8b20d0f74c7aa7");
@@ -413,17 +413,17 @@ mod test {
     impl_test!(Xxh64TwoHash, "f58336a78b6f9476");
     impl_test!(Xxh2_32, "31b7405d");
     impl_test!(Xxh2_64, "f58336a78b6f9476");
-    
+
     // === create_file_with_hello_world_data ===
 
     fn create_file_with_hello_world_data() -> path::PathBuf {
         let path = path::Path::new(HELLO_WORLD_DATA);
-    
+
         if !path.exists() {
             let mut file = fs::File::create(path).unwrap();
             file.write_all(&b"Hello, world!"[..]).unwrap();
         }
-    
+
         path.to_path_buf()
     }
 }

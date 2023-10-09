@@ -14,38 +14,38 @@ test = false
 hex.workspace = true
 paste.workspace = true
 
-adler = { optional = true, version = "*" }
-adler32 = { optional = true, version = "*" }
-belt-hash = { optional = true, version = "*" }
-blake2 = { optional = true, version = "*" }
-blake2b_simd = { optional = true, version = "*" }
-blake2s_simd = { optional = true, version = "*" }
-blake3 = { optional = true, version = "*", features = ["traits-preview"] }
-crc32fast = { optional = true, version = "*" }
-digest = { optional = true, version = "*" }
-farmhash = { optional = true, version = "*" }
-fnv = { optional = true, version = "*" }
-fsb = { optional = true, version = "*" }
-fxhash = { optional = true, version = "*" }
-groestl = { optional = true, version = "*" }
-k12 = { optional = true, version = "*" }
-md-5 = { optional = true, version = "*" }
-metrohash = { optional = true, version = "*" }
-ripemd = { optional = true, version = "*" }
-rustc-hash = { optional = true, version = "*" }
-seahash = { optional = true, version = "*" }
-sha2 = { optional = true, version = "*", features = ["asm"] }
-sha3 = { optional = true, version = "*" }
-shabal = { optional = true, version = "*" }
-siphasher = { optional = true, version = "*" }
-sm3 = { optional = true, version = "*" }
-t1ha = { optional = true, version = "*" }
-tiger = { optional = true, version = "*" }
-twox-hash = { optional = true, version = "*" }
-whirlpool = { optional = true, version = "*" }
-#xxhash-rust = { optional = true, version = "0.8.6", features = ["xxh64", "xxh3"] }
-xxhash-rust = { optional = true, version = "*" }
-xxhash2 = { optional = true, version = "*" }
+adler        = { optional = true, version = "*", default-features = false }
+adler32      = { optional = true, version = "*", default-features = false }
+belt-hash    = { optional = true, version = "*", default-features = false }
+blake2       = { optional = true, version = "*", default-features = false }
+blake2b_simd = { optional = true, version = "*", default-features = false }
+blake2s_simd = { optional = true, version = "*", default-features = false }
+blake3       = { optional = true, version = "*", default-features = false, features = ["traits-preview"] }
+crc32fast    = { optional = true, version = "*", default-features = false }
+digest       = { optional = true, version = "*", default-features = false }
+farmhash     = { optional = true, version = "*", default-features = false }
+fnv          = { optional = true, version = "*", default-features = false }
+fsb          = { optional = true, version = "*", default-features = false }
+fxhash       = { optional = true, version = "*", default-features = false }
+groestl      = { optional = true, version = "*", default-features = false }
+k12          = { optional = true, version = "*", default-features = false, features = ["std"] }
+md-5         = { optional = true, version = "*", default-features = false }
+metrohash    = { optional = true, version = "*", default-features = false }
+ripemd       = { optional = true, version = "*", default-features = false }
+rustc-hash   = { optional = true, version = "*", default-features = false }
+seahash      = { optional = true, version = "*", default-features = false }
+sha2         = { optional = true, version = "*", default-features = false, features = ["asm"] }
+sha3         = { optional = true, version = "*", default-features = false }
+shabal       = { optional = true, version = "*", default-features = false }
+siphasher    = { optional = true, version = "*", default-features = false }
+sm3          = { optional = true, version = "*", default-features = false }
+t1ha         = { optional = true, version = "*", default-features = false }
+tiger        = { optional = true, version = "*", default-features = false }
+twox-hash    = { optional = true, version = "*", default-features = false }
+whirlpool    = { optional = true, version = "*", default-features = false }
+#xxhash-rust = { optional = true, version = "0.8.6", default-features = false, features = ["xxh64", "xxh3"] }
+xxhash-rust  = { optional = true, version = "*", default-features = false }
+xxhash2      = { optional = true, version = "*", default-features = false }
 
 [dev-dependencies]
 criterion.workspace = true

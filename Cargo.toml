@@ -7,12 +7,12 @@ members = [
 ]
 
 [workspace.dependencies]
-criterion = { version = "*", default-features = false }
-hex = { version = "*", default-features = false, features = ["alloc"] }
-indicatif = { version = "*", default-features = false, features = ["rayon"] }
-investigator.path = "packages/investigator"
-paste = { version = "*", default-features = false }
-rand = { version = "*", default-features = false }
-rayon = { version = "*", default-features = false }
-tempdir = { version = "*", default-features = false }
-walkdir = { version = "*", default-features = false }
+criterion    = { version = "*", default-features = false }
+hex          = { version = "*", default-features = false, features = ["alloc"] }
+indicatif    = { version = "*", default-features = false, features = ["rayon"] }
+investigator = { path = "packages/investigator" }
+paste        = { version = "*", default-features = false }
+rand         = { version = "*", default-features = false, features = ["std", "std_rng"] }
+rayon        = { version = "*", default-features = false }
+tempdir      = { version = "*", default-features = false }
+walkdir      = { version = "*", default-features = false }

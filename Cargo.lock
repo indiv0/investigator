@@ -1006,7 +1006,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fa44aa51ae1a544e2c35a38831ba54ae40591f21384816f531b84f3e984b9ccc"
 dependencies = [
  "cfg-if 0.1.10",
- "lazy_static",
  "num-traits",
  "rustc_version",
 ]
@@ -1047,7 +1046,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97fee6b57c6a41524a810daee9286c02d7752c4253064d0b05472833a438f675"
 dependencies = [
  "cfg-if 1.0.0",
- "rand 0.8.5",
  "static_assertions",
 ]
 
