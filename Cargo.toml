@@ -6,12 +6,12 @@ members = [
 ]
 
 [workspace.dependencies]
-criterion = { version = "0.4.0", default-features = false }
-hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
-indicatif = { version = "0.17.1", default-features = false, features = ["rayon"] }
+criterion = { version = "*", default-features = false }
+hex = { version = "*", default-features = false, features = ["alloc"] }
+indicatif = { version = "*", default-features = false, features = ["rayon"] }
 investigator.path = "packages/investigator"
-paste = { version = "1.0.12", default-features = false }
-rand = { version = "0.8.5", default-features = false }
-rayon = { version = "1.5.3", default-features = false }
-tempdir = { version = "0.3.7", default-features = false }
-walkdir = { version = "2.3.2", default-features = false }
+paste = { version = "*", default-features = false }
+rand = { version = "*", default-features = false }
+rayon = { version = "*", default-features = false }
+tempdir = { version = "*", default-features = false }
+walkdir = { version = "*", default-features = false }

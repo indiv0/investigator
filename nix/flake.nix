@@ -17,7 +17,7 @@
         pkgs = nixpkgs.legacyPackages.${system};
         rust = fenix.packages.${system}.fromToolchainFile {
           dir = ../.;
-          sha256 = "sha256-X3jmirc9bAxFcaqYkSy4qNDJukFWF8zE7idveYvpLFE=";
+          sha256 = "sha256-XRdrLdi+/D16RqC14ZI9ds9/t9kqP6n7T/Ag78oMJVM=";
         };
       in
       {
