@@ -14,38 +14,38 @@ test = false
 hex.workspace = true
 paste.workspace = true
 
-adler = { optional = true, version = "1.0.2" }
-adler32 = { optional = true, version = "1.2.0" }
-belt-hash = { optional = true, version = "0.1.0" }
-blake2 = { optional = true, version = "0.10.4" }
-blake2b_simd = { optional = true, version = "1.0.0" }
-blake2s_simd = { optional = true, version = "1.0.0" }
-blake3 = { optional = true, version = "1.3.1", features = ["traits-preview"] }
-crc32fast = { optional = true, version = "1.3.2" }
-digest = { optional = true, version = "0.10.5" }
-farmhash = { optional = true, version = "1.1.5" }
-fnv = { optional = true, version = "1.0.7" }
-fsb = { optional = true, version = "0.1.3" }
-fxhash = { optional = true, version = "0.2.1" }
-groestl = { optional = true, version = "0.10.1" }
-k12 = { optional = true, version = "0.2.1" }
-md-5 = { optional = true, version = "0.10.5" }
-metrohash = { optional = true, version = "1.0.6" }
-ripemd = { optional = true, version = "0.1.3" }
-rustc-hash = { optional = true, version = "1.1.0" }
-seahash = { optional = true, version = "4.1.0" }
-sha2 = { optional = true, version = "0.10.6", features = ["asm"] }
-sha3 = { optional = true, version = "0.10.5" }
-shabal = { optional = true, version = "0.4.1" }
-siphasher = { optional = true, version = "0.3.10" }
-sm3 = { optional = true, version = "0.4.1" }
-t1ha = { optional = true, version = "0.1.0" }
-tiger = { optional = true, version = "0.2.1" }
-twox-hash = { optional = true, version = "1.6.3" }
-whirlpool = { optional = true, version = "0.10.4" }
+adler = { optional = true, version = "*" }
+adler32 = { optional = true, version = "*" }
+belt-hash = { optional = true, version = "*" }
+blake2 = { optional = true, version = "*" }
+blake2b_simd = { optional = true, version = "*" }
+blake2s_simd = { optional = true, version = "*" }
+blake3 = { optional = true, version = "*", features = ["traits-preview"] }
+crc32fast = { optional = true, version = "*" }
+digest = { optional = true, version = "*" }
+farmhash = { optional = true, version = "*" }
+fnv = { optional = true, version = "*" }
+fsb = { optional = true, version = "*" }
+fxhash = { optional = true, version = "*" }
+groestl = { optional = true, version = "*" }
+k12 = { optional = true, version = "*" }
+md-5 = { optional = true, version = "*" }
+metrohash = { optional = true, version = "*" }
+ripemd = { optional = true, version = "*" }
+rustc-hash = { optional = true, version = "*" }
+seahash = { optional = true, version = "*" }
+sha2 = { optional = true, version = "*", features = ["asm"] }
+sha3 = { optional = true, version = "*" }
+shabal = { optional = true, version = "*" }
+siphasher = { optional = true, version = "*" }
+sm3 = { optional = true, version = "*" }
+t1ha = { optional = true, version = "*" }
+tiger = { optional = true, version = "*" }
+twox-hash = { optional = true, version = "*" }
+whirlpool = { optional = true, version = "*" }
 #xxhash-rust = { optional = true, version = "0.8.6", features = ["xxh64", "xxh3"] }
-xxhash-rust = { optional = true, version = "0.8.6" }
-xxhash2 = { optional = true, version = "0.1.0" }
+xxhash-rust = { optional = true, version = "*" }
+xxhash2 = { optional = true, version = "*" }
 
 [dev-dependencies]
 criterion.workspace = true
