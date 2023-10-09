@@ -1,6 +1,3 @@
-# find-files
-/find-files.db
-
 # investigator
 /packages/investigator/benches/random_data
 /packages/dupdir/out
