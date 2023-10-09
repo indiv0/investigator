@@ -1,5 +1,6 @@
 use core::str;
 use core::str::FromStr as _;
+use dupdir_core::find;
 use indicatif::ProgressIterator as _;
 use std::env;
 use std::error;
@@ -51,7 +52,15 @@ fn main() {
         let lines = match command {
             Command::Find => {
                 let path = path_arg(&mut args)?;
-                dupdir_core::run_find(&path)
+                let files = find::WalkDirFinder::new(&path);
+                let files = files.into_iter();
+                let files = files.map(|p| {
+                    let p = p.as_ref();
+                    let s = dupdir_core::path_to_str(p);
+                    s.to_string()
+                });
+                let files = files.collect();
+                dupdir_core::Lines(files)
             }
             Command::Hash => {
                 let path = path_arg(&mut args)?;
@@ -77,7 +86,15 @@ fn main() {
             }
             Command::All => {
                 let search_path = path_arg(&mut args)?;
-                let files = dupdir_core::run_find(&search_path);
+                let files = find::WalkDirFinder::new(&search_path);
+                let files = files.into_iter();
+                let files = files.map(|p| {
+                    let p = p.as_ref();
+                    let s = dupdir_core::path_to_str(p);
+                    s.to_string()
+                });
+                let files = files.collect();
+                let files = dupdir_core::Lines(files);
                 let hashes = dupdir_core::run_hash(&files);
                 let dir_files = dupdir_core::run_dir_files(&files);
                 let dir_hashes = dupdir_core::run_dir_hashes(&dir_files, &hashes);

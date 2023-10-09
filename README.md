@@ -26,11 +26,11 @@ find /Users/indiv0/Desktop/files -not -perm -u=r -not -perm -u=w -not -perm -u=x
 find /Users/indiv0/Desktop/files -not -perm -u=r -not -perm -u=w -not -perm -u=x -delete
 mkdir -p target/data
 sudo su
-time ./target/release/dupdir find /Users/indiv0/Desktop/files > target/data/files.txt && chown indiv0 target/data/files.txt
-time ./target/release/dupdir hash target/data/files.txt > target/data/hashes.txt && chown indiv0 target/data/hashes.txt
-time ./target/release/dupdir dir_files target/data/files.txt > target/data/dir_files.txt && chown indiv0 target/data/dir_files.txt
-time ./target/release/dupdir dir_hashes target/data/dir_files.txt target/data/hashes.txt > target/data/dir_hashes.txt && chown indiv0 target/data/dir_hashes.txt
-time ./target/release/dupdir dup_dirs target/data/dir_hashes.txt > target/data/dup_dirs.txt && chown indiv0 target/data/dup_dirs.txt
+time ./target/release/dupdir_cli find /Users/indiv0/Desktop/files > target/data/files.txt && chown indiv0 target/data/files.txt
+time ./target/release/dupdir_cli hash target/data/files.txt > target/data/hashes.txt && chown indiv0 target/data/hashes.txt
+time ./target/release/dupdir_cli dir_files target/data/files.txt > target/data/dir_files.txt && chown indiv0 target/data/dir_files.txt
+time ./target/release/dupdir_cli dir_hashes target/data/dir_files.txt target/data/hashes.txt > target/data/dir_hashes.txt && chown indiv0 target/data/dir_hashes.txt
+time ./target/release/dupdir_cli dup_dirs target/data/dir_hashes.txt > target/data/dup_dirs.txt && chown indiv0 target/data/dup_dirs.txt
 exit
 cat target/data/dup_dirs.txt | cut -d';' -f2 | xargs -d '\n' du -d0 | sort -n
 ```

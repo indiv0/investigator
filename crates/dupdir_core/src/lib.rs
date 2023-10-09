@@ -18,7 +18,7 @@ const UNIQUE_SEPARATOR: &str = "    ";
 mod dir_files;
 mod dir_hashes;
 mod dup_dirs;
-mod find;
+pub mod find;
 mod hash;
 #[cfg(test)]
 mod tests;
@@ -26,7 +26,6 @@ mod tests;
 pub use dir_files::main as run_dir_files;
 pub use dir_hashes::main as run_dir_hashes;
 pub use dup_dirs::main as run_dup_dirs;
-pub use find::main as run_find;
 pub use hash::main as run_hash;
 
 
@@ -91,6 +90,6 @@ fn assert_path_rules(p: &str) {
 }
 
 #[inline]
-fn path_to_str(p: &path::Path) -> &str {
+pub fn path_to_str(p: &path::Path) -> &str {
     p.to_str().expect("Path should be valid UTF-8")
 }

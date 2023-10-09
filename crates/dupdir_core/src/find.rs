@@ -1,107 +1,135 @@
+use core::fmt;
+use core::marker;
+use core::str;
+use std::path;
 #[cfg(test)]
 use std::process;
-use std::str;
 
-// ================
-// === Strategy ===
-// ================
 
-#[derive(Clone, Debug, Default)]
-pub enum Strategy {
-    #[cfg(test)]
-    Unix,
-    #[default]
-    WalkDir,
+
+// ==================
+// === UnixFinder ===
+// ==================
+
+#[cfg(test)]
+#[must_use]
+pub(crate) struct UnixFinder {
+    stdout: Vec<u8>,
 }
 
-// ==============
-// === Finder ===
-// ==============
+// === Internal `impl` ===
 
-#[derive(Clone, Debug, Default)]
-pub struct Finder<'a> {
-    path: &'a str,
-    max_depth: Option<usize>,
-    strategy: Strategy,
-}
-
-impl<'a> Finder<'a> {
-    pub fn path(mut self, path: &'a str) -> Self {
-        self.path = path;
-        self
-    }
-
-    #[allow(dead_code)]
-    pub fn max_depth(mut self, max_depth: usize) -> Self {
-        self.max_depth = Some(max_depth);
-        self
-    }
-
-    pub fn strategy(mut self, strategy: Strategy) -> Self {
-        self.strategy = strategy;
-        self
-    }
-
-    pub fn find(&self) -> Vec<String> {
-        match self.strategy {
-            #[cfg(test)]
-            Strategy::Unix => self.find_unix(),
-            Strategy::WalkDir => self.find_walk_dir(),
-        }
-    }
-
-    #[cfg(test)]
-    fn find_unix(&self) -> Vec<String> {
-        let mut args = vec![self.path, "-type", "f"];
-        let max_depth = self.max_depth.map(|m| m.to_string());
-        let max_depth = max_depth.as_ref();
-        if let Some(max_depth) = max_depth {
-            args.push("-maxdepth");
-            args.push(max_depth);
-        }
-
-        let output = process::Command::new("find")
-            .args(args)
-            .output()
-            .expect("Failed to execute process");
+#[cfg(test)]
+impl UnixFinder {
+    pub(crate) fn new(path: &str) -> Self {
+        let args = vec![path, "-type", "f"];
+        let cmd = &mut process::Command::new("find");
+        let cmd = cmd.args(args);
+        let output = cmd.output();
+        let output = output.expect("Failed to execute process");
         assert!(output.status.success());
         assert!(output.stderr.is_empty());
         let stdout = output.stdout;
-        let stdout = str::from_utf8(&stdout).expect("Failed to read stdout as utf8");
-        let stdout = stdout.trim().to_string();
-        let paths = stdout.lines();
-        let paths = paths.inspect(|p| crate::assert_path_rules(p));
-        let paths = paths.map(|p| p.trim().to_string());
-        paths.collect()
+        Self { stdout }
     }
+}
 
-    fn find_walk_dir(&self) -> Vec<String> {
-        let mut entries = walkdir::WalkDir::new(self.path);
-        if let Some(max_depth) = self.max_depth {
-            entries = entries.max_depth(max_depth);
+// === Trait `impl`s ===
+
+#[cfg(test)]
+impl<'a> IntoIterator for &'a UnixFinder {
+    type Item = &'a path::Path;
+    type IntoIter = FinderIter<'a, &'a path::Path>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let stdout = str::from_utf8(&self.stdout);
+        let stdout = stdout.expect("Failed to read stdout as utf8");
+        let lines = stdout.lines();
+        let paths = lines.map(|p| {
+            crate::assert_path_rules(p);
+            path::Path::new(p)
+        });
+        let paths = Box::new(paths);
+        Self::IntoIter { paths }
+    }
+}
+
+// =====================
+// === WalkdirFinder ===
+// =====================
+
+#[must_use]
+pub struct WalkDirFinder<'a> {
+    entries: walkdir::WalkDir,
+    marker: marker::PhantomData<&'a ()>,
+}
+
+// === Main `impl` ===
+
+impl WalkDirFinder<'_> {
+    pub fn new(path: &str) -> Self {
+        let entries = walkdir::WalkDir::new(path);
+        Self { entries, marker: marker::PhantomData }
+    }
+}
+
+// === Trait `impl`s ===
+
+impl<'a> IntoIterator for WalkDirFinder<'a> {
+    type Item = path::PathBuf;
+    type IntoIter = FinderIter<'a, path::PathBuf>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let entries = self.entries.into_iter();
+        let paths = entries.filter_map(|e| {
+            let e = e.expect("Failed to read entry");
+            let file_type = e.file_type();
+            if !file_type.is_file() {
+                return None;
+            }
+            let path = e.into_path();
+            Some(path)
+        });
+        let paths = Box::new(paths);
+        Self::IntoIter { paths }
+    }
+}
+
+// ==================
+// === FinderIter ===
+// ==================
+
+#[must_use]
+pub struct FinderIter<'a, P> {
+    paths: Box<dyn Iterator<Item = P> + 'a>,
+}
+
+// === Trait `impl`s ===
+
+impl<'a, P> Iterator for FinderIter<'a, P>
+where
+    P: AsRef<path::Path> + 'a,
+{
+    type Item = P;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.paths.next() {
+            Some(path) => {
+                let path_ref = path.as_ref();
+                let path_str = crate::path_to_str(path_ref);
+                crate::assert_path_rules(path_str);
+                Some(path)
+            },
+            None => None,
         }
-        let entries = entries.into_iter();
-        let entries = entries.map(|e| e.expect("Failed to read entry"));
-        let files = entries.filter(|e| e.file_type().is_file());
-        let paths = files.map(|f| {
-            let path = crate::path_to_str(f.path());
-            crate::assert_path_rules(path);
-            path.trim().to_string()
-        });
-        let paths = paths.map(|p| {
-            assert!(!p.is_empty(), "Path is empty");
-            p
-        });
-        paths.collect::<Vec<String>>()
     }
 }
 
-// ============
-// === Main ===
-// ============
-
-pub fn main(path: &str) -> crate::Lines {
-    let finder = Finder::default().path(path).strategy(Strategy::WalkDir);
-    let paths = finder.find();
-    crate::Lines(paths)
+impl<P> fmt::Debug for FinderIter<'_, P> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Finder")
+            .field("lines", &"Box<dyn Iterator<Item = P>>")
+            .finish()
+    }
 }
+
