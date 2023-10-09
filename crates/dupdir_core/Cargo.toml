@@ -11,4 +11,6 @@ dupdir_hash.workspace = true
 hex.workspace = true
 indicatif.workspace = true
 rayon.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 walkdir.workspace = true

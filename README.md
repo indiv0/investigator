@@ -27,10 +27,35 @@ find /Users/indiv0/Desktop/files -not -perm -u=r -not -perm -u=w -not -perm -u=x
 mkdir -p target/data
 sudo su
 time ./target/release/dupdir_cli find /Users/indiv0/Desktop/files > target/data/files.txt && chown indiv0 target/data/files.txt
+# real    0m1.101s
+# user    0m0.129s
+# sys     0m0.782s
+wc -l target/data/files.txt
+# 189224 target/data/files.txt
 time ./target/release/dupdir_cli hash target/data/files.txt > target/data/hashes.txt && chown indiv0 target/data/hashes.txt
+# real    2m52.213s
+# user    0m34.809s
+# sys     1m20.665s
+wc -l target/data/hashes.txt
+# 189224 target/data/hashes.txt
 time ./target/release/dupdir_cli dir_files target/data/files.txt > target/data/dir_files.txt && chown indiv0 target/data/dir_files.txt
+# real    0m7.310s
+# user    0m2.600s
+# sys     0m4.504s
+wc -l target/data/dir_files.txt
+#3269824 target/data/dir_files.txt
 time ./target/release/dupdir_cli dir_hashes target/data/dir_files.txt target/data/hashes.txt > target/data/dir_hashes.txt && chown indiv0 target/data/dir_hashes.txt
+# real    0m2.315s
+# user    0m2.050s
+# sys     0m0.336s
+wc -l target/data/dir_hashes.txt
+# 33966 target/data/dir_hashes.txt
 time ./target/release/dupdir_cli dup_dirs target/data/dir_hashes.txt > target/data/dup_dirs.txt && chown indiv0 target/data/dup_dirs.txt
+# real    0m0.075s
+# user    0m0.045s
+# sys     0m0.041s
+wc -l target/data/dup_dirs.txt
+# 26160 target/data/dup_dirs.txt
 exit
 cat target/data/dup_dirs.txt | cut -d';' -f2 | xargs -d '\n' du -d0 | sort -n
 ```

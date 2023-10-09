@@ -1,8 +1,9 @@
+use crate::prelude::*;
+
 use dupdir_hash::Hasher as _;
 use std::fs;
 use std::io;
 use std::io::BufRead as _;
-use std::path;
 use std::str;
 
 // =================
@@ -10,6 +11,7 @@ use std::str;
 // =================
 
 const UNIQUE_SEPARATOR: &str = "    ";
+const STATE_JSON: &str = "state.json";
 
 // ==============
 // === Export ===
@@ -30,6 +32,52 @@ pub use hash::main as run_hash;
 
 
 
+// ===============
+// === Prelude ===
+// ===============
+
+mod prelude {
+    pub(crate) use serde::Deserialize;
+    pub(crate) use serde::Serialize;
+    pub(crate) use std::collections::BTreeMap;
+    pub(crate) use std::path::Path;
+    pub(crate) use std::path::PathBuf;
+}
+
+
+
+// =============
+// === State ===
+// =============
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[must_use]
+pub struct State {
+    hashes: BTreeMap<PathBuf, String>,
+}
+
+// === Main `impl` ===
+
+impl State {
+    pub fn save(&self) {
+        let json = serde_json::to_string_pretty(&self).expect("Serialize");
+        let path = Path::new(STATE_JSON);
+        fs::write(path, json).expect("Write");
+    }
+
+    pub fn load() -> Self {
+        let path = Path::new(STATE_JSON);
+        if path.exists() {
+            let json = fs::read_to_string(path).expect("Read");
+            serde_json::from_str(&json).expect("Deserialize")
+        } else {
+            Self::default()
+        }
+    }
+}
+
+
+
 // =============
 // === Lines ===
 // =============
@@ -40,7 +88,7 @@ pub struct Lines(pub Vec<String>);
 // === Main `impl` ===
 
 impl Lines {
-    pub fn from_path(path: impl AsRef<path::Path>) -> Result<Self, io::Error> {
+    pub fn from_path(path: impl AsRef<Path>) -> Result<Self, io::Error> {
         let path = path.as_ref();
         Self::try_from(path)
     }
@@ -57,10 +105,10 @@ impl Lines {
 
 // === Trait `impls` ===
 
-impl TryFrom<&path::Path> for Lines {
+impl TryFrom<&Path> for Lines {
     type Error = io::Error;
 
-    fn try_from(path: &path::Path) -> Result<Self, Self::Error> {
+    fn try_from(path: &Path) -> Result<Self, Self::Error> {
         let file = fs::File::open(path)?;
         let file = io::BufReader::new(file);
         let lines = file.lines().map(|line| {
@@ -90,6 +138,6 @@ fn assert_path_rules(p: &str) {
 }
 
 #[inline]
-pub fn path_to_str(p: &path::Path) -> &str {
+pub fn path_to_str(p: &Path) -> &str {
     p.to_str().expect("Path should be valid UTF-8")
 }

@@ -1,3 +1,5 @@
+use crate::prelude::*;
+
 use indicatif::ParallelProgressIterator as _;
 use indicatif::ProgressIterator as _;
 use rayon::prelude::*;
@@ -10,13 +12,13 @@ use std::str;
 
 #[derive(Clone, Debug)]
 pub struct DirHashes<'a> {
+    state: &'a crate::State,
     dir_files: &'a crate::Lines,
-    hashes: &'a crate::Lines,
 }
 
 impl<'a> DirHashes<'a> {
-    pub fn new(dir_files: &'a crate::Lines, hashes: &'a crate::Lines) -> Self {
-        Self { dir_files, hashes }
+    pub fn new(state: &'a mut crate::State, dir_files: &'a crate::Lines) -> Self {
+        Self { state, dir_files }
     }
 
     pub fn dir_hashes(&self) -> Vec<String> {
@@ -86,10 +88,11 @@ impl<'a> DirHashes<'a> {
     }
 
     fn read_hashes(&self) -> impl Iterator<Item = (&str, &str)> {
-        let crate::Lines(lines) = self.hashes;
-        let lines = lines.iter();
-        lines.map(|line| {
-            let (hash, file) = line.split_once("  ").expect("Failed to split line");
+        let file_hashes = self.state.hashes.iter();
+        file_hashes.map(|(file, hash)| {
+            let hash = hash.as_str();
+            let file = <PathBuf as AsRef<Path>>::as_ref(file);
+            let file = crate::path_to_str(file);
             crate::assert_path_rules(hash);
             crate::assert_path_rules(file);
             (hash, file)
@@ -114,8 +117,8 @@ impl<'a> DirHashes<'a> {
 // === Main ===
 // ============
 
-pub fn main(dir_files: &crate::Lines, hashes: &crate::Lines) -> crate::Lines {
-    let dir_hashes = DirHashes::new(dir_files, hashes);
+pub fn main(state: &mut crate::State, dir_files: &crate::Lines) -> crate::Lines {
+    let dir_hashes = DirHashes::new(state, dir_files);
     let dir_hashes = dir_hashes.dir_hashes();
     crate::Lines(dir_hashes)
 }

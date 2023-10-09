@@ -49,7 +49,8 @@ fn main() {
         let _command = args.next();
         let command = args.next().expect("Command required");
         let command = Command::from_str(&command)?;
-        let lines = match command {
+        let mut state = dupdir_core::State::load();
+        match command {
             Command::Find => {
                 let path = path_arg(&mut args)?;
                 let files = find::WalkDirFinder::new(&path);
@@ -60,29 +61,48 @@ fn main() {
                     s.to_string()
                 });
                 let files = files.collect();
-                dupdir_core::Lines(files)
+                let lines = dupdir_core::Lines(files);
+
+                // Write the resulting strings to stdout.
+                let mut writer = stdout_writer();
+                let dupdir_core::Lines(lines) = lines;
+                write_output(&mut writer, lines)?;
             }
             Command::Hash => {
                 let path = path_arg(&mut args)?;
                 let paths = dupdir_core::Lines::from_path(path)?;
-                dupdir_core::run_hash(&paths)
+                dupdir_core::run_hash(&mut state, &paths);
+                state.save();
             }
             Command::DirFiles => {
                 let path = path_arg(&mut args)?;
                 let files = dupdir_core::Lines::from_path(path)?;
-                dupdir_core::run_dir_files(&files)
+                let lines = dupdir_core::run_dir_files(&files);
+
+                // Write the resulting strings to stdout.
+                let mut writer = stdout_writer();
+                let dupdir_core::Lines(lines) = lines;
+                write_output(&mut writer, lines)?;
             }
             Command::DirHashes => {
                 let dir_files = path_arg(&mut args)?;
-                let hashes = path_arg(&mut args)?;
                 let dir_files = dupdir_core::Lines::from_path(dir_files)?;
-                let hashes = dupdir_core::Lines::from_path(hashes)?;
-                dupdir_core::run_dir_hashes(&dir_files, &hashes)
+                let lines = dupdir_core::run_dir_hashes(&mut state, &dir_files);
+
+                // Write the resulting strings to stdout.
+                let mut writer = stdout_writer();
+                let dupdir_core::Lines(lines) = lines;
+                write_output(&mut writer, lines)?;
             }
             Command::DupDirs => {
                 let dir_hashes = path_arg(&mut args)?;
                 let dir_hashes = dupdir_core::Lines::from_path(dir_hashes)?;
-                dupdir_core::run_dup_dirs(&dir_hashes)
+                let lines = dupdir_core::run_dup_dirs(&dir_hashes);
+
+                // Write the resulting strings to stdout.
+                let mut writer = stdout_writer();
+                let dupdir_core::Lines(lines) = lines;
+                write_output(&mut writer, lines)?;
             }
             Command::All => {
                 let search_path = path_arg(&mut args)?;
@@ -95,16 +115,18 @@ fn main() {
                 });
                 let files = files.collect();
                 let files = dupdir_core::Lines(files);
-                let hashes = dupdir_core::run_hash(&files);
+                dupdir_core::run_hash(&mut state, &files);
+                state.save();
                 let dir_files = dupdir_core::run_dir_files(&files);
-                let dir_hashes = dupdir_core::run_dir_hashes(&dir_files, &hashes);
-                dupdir_core::run_dup_dirs(&dir_hashes)
+                let dir_hashes = dupdir_core::run_dir_hashes(&mut state, &dir_files);
+                let lines = dupdir_core::run_dup_dirs(&dir_hashes);
+
+                // Write the resulting strings to stdout.
+                let mut writer = stdout_writer();
+                let dupdir_core::Lines(lines) = lines;
+                write_output(&mut writer, lines)?;
             }
         };
-        // Write the resulting strings to stdout.
-        let mut writer = stdout_writer();
-        let dupdir_core::Lines(lines) = lines;
-        write_output(&mut writer, lines)?;
         Ok(())
     }
 

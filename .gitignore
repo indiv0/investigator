@@ -1,6 +1,8 @@
 # hashes
 /crates/dupdir_hash/benches/hello_world
 /crates/dupdir_tests/out
+/crates/state.json
+/state.json
 
 # rust/cargo
 /target
