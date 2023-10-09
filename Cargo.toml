@@ -1,18 +1,18 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/dupdir",
     "crates/dupdir_cli",
+    "crates/dupdir_core",
+    "crates/dupdir_hash",
     "crates/dupdir_tests",
-    "crates/hashes",
-    "crates/utils",
 ]
 
 [workspace.dependencies]
 criterion    = { version = "*", default-features = false }
-dupdir       = { path = "crates/dupdir" }
+dupdir_cli   = { path = "crates/dupdir_cli" }
+dupdir_core  = { path = "crates/dupdir_core" }
+dupdir_hash  = { path = "crates/dupdir_hash" }
 dupdir_tests = { path = "crates/dupdir_tests" }
-hashes       = { path = "crates/hashes" }
 hex          = { version = "*", default-features = false, features = ["alloc"] }
 indicatif    = { version = "*", default-features = false, features = ["rayon"] }
 paste        = { version = "*", default-features = false }

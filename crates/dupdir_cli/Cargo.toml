@@ -8,5 +8,5 @@ name = "dupdir_cli"
 test = false
 
 [dependencies]
-dupdir.workspace = true
+dupdir_core.workspace = true
 indicatif.workspace = true

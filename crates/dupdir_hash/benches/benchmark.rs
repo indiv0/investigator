@@ -49,9 +49,9 @@ macro_rules! impl_bench_group_hash {
                         b.iter(|| {
                             let mut buf = criterion::black_box(buf);
                             let mut reader = &mut buf;
-                            let mut hasher = hashes::$ty::default();
-                            hashes::Hasher::update(&mut hasher, criterion::black_box(&mut reader));
-                            hashes::Hasher::finish(hasher)
+                            let mut hasher = dupdir_hash::$ty::default();
+                            dupdir_hash::Hasher::update(&mut hasher, criterion::black_box(&mut reader));
+                            dupdir_hash::Hasher::finish(hasher)
                         })
                     });
                     )*
@@ -140,12 +140,12 @@ macro_rules! impl_bench_group_hash_file {
                         b.iter(|| {
                             let path = criterion::black_box(path);
                             let mut reader = fs::File::open(path).unwrap();
-                            let mut hasher = hashes::$ty::default();
-                            hashes::copy_wide(
+                            let mut hasher = dupdir_hash::$ty::default();
+                            dupdir_hash::copy_wide(
                                 criterion::black_box(&mut reader),
                                 criterion::black_box(&mut hasher),
                             ).unwrap();
-                            hashes::Hasher::finish(hasher)
+                            dupdir_hash::Hasher::finish(hasher)
                         })
                     });
                     )*

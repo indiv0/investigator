@@ -56,42 +56,42 @@ fn main() {
         let lines = match command {
             Command::Find => {
                 let path = path_arg(&mut args)?;
-                dupdir::run_find(&path)
+                dupdir_core::run_find(&path)
             }
             Command::Hash => {
                 let path = path_arg(&mut args)?;
-                let paths = dupdir::Lines::from_path(path)?;
-                dupdir::run_hash(&paths)
+                let paths = dupdir_core::Lines::from_path(path)?;
+                dupdir_core::run_hash(&paths)
             }
             Command::DirFiles => {
                 let path = path_arg(&mut args)?;
-                let files = dupdir::Lines::from_path(path)?;
-                dupdir::run_dir_files(&files)
+                let files = dupdir_core::Lines::from_path(path)?;
+                dupdir_core::run_dir_files(&files)
             }
             Command::DirHashes => {
                 let dir_files = path_arg(&mut args)?;
                 let hashes = path_arg(&mut args)?;
-                let dir_files = dupdir::Lines::from_path(dir_files)?;
-                let hashes = dupdir::Lines::from_path(hashes)?;
-                dupdir::run_dir_hashes(&dir_files, &hashes)
+                let dir_files = dupdir_core::Lines::from_path(dir_files)?;
+                let hashes = dupdir_core::Lines::from_path(hashes)?;
+                dupdir_core::run_dir_hashes(&dir_files, &hashes)
             }
             Command::DupDirs => {
                 let dir_hashes = path_arg(&mut args)?;
-                let dir_hashes = dupdir::Lines::from_path(dir_hashes)?;
-                dupdir::run_dup_dirs(&dir_hashes)
+                let dir_hashes = dupdir_core::Lines::from_path(dir_hashes)?;
+                dupdir_core::run_dup_dirs(&dir_hashes)
             }
             Command::All => {
                 let search_path = path_arg(&mut args)?;
-                let files = dupdir::run_find(&search_path);
-                let hashes = dupdir::run_hash(&files);
-                let dir_files = dupdir::run_dir_files(&files);
-                let dir_hashes = dupdir::run_dir_hashes(&dir_files, &hashes);
-                dupdir::run_dup_dirs(&dir_hashes)
+                let files = dupdir_core::run_find(&search_path);
+                let hashes = dupdir_core::run_hash(&files);
+                let dir_files = dupdir_core::run_dir_files(&files);
+                let dir_hashes = dupdir_core::run_dir_hashes(&dir_files, &hashes);
+                dupdir_core::run_dup_dirs(&dir_hashes)
             },
         };
         // Write the resulting strings to stdout.
         let mut writer = stdout_writer();
-        let dupdir::Lines(lines) = lines;
+        let dupdir_core::Lines(lines) = lines;
         write_output(&mut writer, lines)?;
         Ok(())
     }

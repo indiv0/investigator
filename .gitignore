@@ -1,5 +1,5 @@
 # hashes
-/crates/hashes/benches/hello_world
+/crates/dupdir_hash/benches/hello_world
 /crates/dupdir_tests/out
 
 # rust/cargo

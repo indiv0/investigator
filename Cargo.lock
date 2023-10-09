@@ -16,9 +16,9 @@ checksum = "aae1277d39aeec15cb388266ecc24b11c80469deae6067e17a1a7aa9e5c1f234"
 
 [[package]]
 name = "aho-corasick"
-version = "1.1.1"
+version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea5d730647d4fadd988536d06fecce94b7b4f2a7efdae548f1cf4b63205518ab"
+checksum = "b2969dcb958b36655471fc61f7e416fa76033bdd4bfed0678d8fee1e2d07a1f0"
 dependencies = [
  "memchr",
 ]
@@ -348,10 +348,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "dupdir"
+name = "dupdir_cli"
 version = "0.1.0"
 dependencies = [
- "hashes",
+ "dupdir_core",
+ "indicatif",
+]
+
+[[package]]
+name = "dupdir_core"
+version = "0.1.0"
+dependencies = [
+ "dupdir_hash",
  "hex",
  "indicatif",
  "rayon",
@@ -359,16 +367,53 @@ dependencies = [
 ]
 
 [[package]]
-name = "dupdir_cli"
+name = "dupdir_hash"
 version = "0.1.0"
 dependencies = [
- "dupdir",
- "indicatif",
+ "adler",
+ "adler32",
+ "belt-hash",
+ "blake2",
+ "blake2b_simd",
+ "blake2s_simd",
+ "blake3",
+ "crc32fast",
+ "criterion",
+ "digest",
+ "farmhash",
+ "fnv",
+ "fsb",
+ "fxhash",
+ "groestl",
+ "hex",
+ "k12",
+ "md-5",
+ "metrohash",
+ "paste",
+ "rand 0.8.5",
+ "ripemd",
+ "rustc-hash",
+ "seahash",
+ "sha2",
+ "sha3",
+ "shabal",
+ "siphasher",
+ "sm3",
+ "t1ha",
+ "tempdir",
+ "tiger",
+ "twox-hash",
+ "whirlpool",
+ "xxhash-rust",
+ "xxhash2",
 ]
 
 [[package]]
 name = "dupdir_tests"
 version = "0.1.0"
+dependencies = [
+ "dupdir_cli",
+]
 
 [[package]]
 name = "either"
@@ -464,48 +509,6 @@ name = "half"
 version = "1.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eabb4a44450da02c90444cf74558da904edde8fb4e9035a9a6a4e15445af0bd7"
-
-[[package]]
-name = "hashes"
-version = "0.1.0"
-dependencies = [
- "adler",
- "adler32",
- "belt-hash",
- "blake2",
- "blake2b_simd",
- "blake2s_simd",
- "blake3",
- "crc32fast",
- "criterion",
- "digest",
- "farmhash",
- "fnv",
- "fsb",
- "fxhash",
- "groestl",
- "hex",
- "k12",
- "md-5",
- "metrohash",
- "paste",
- "rand 0.8.5",
- "ripemd",
- "rustc-hash",
- "seahash",
- "sha2",
- "sha3",
- "shabal",
- "siphasher",
- "sm3",
- "t1ha",
- "tempdir",
- "tiger",
- "twox-hash",
- "whirlpool",
- "xxhash-rust",
- "xxhash2",
-]
 
 [[package]]
 name = "hermit-abi"
@@ -1072,10 +1075,6 @@ name = "unicode-ident"
 version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3354b9ac3fae1ff6755cb6db53683adb661634f67557942dea4facebec0fee4b"
-
-[[package]]
-name = "utils"
-version = "0.1.0"
 
 [[package]]
 name = "version_check"

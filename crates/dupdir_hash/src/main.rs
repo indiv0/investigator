@@ -1,6 +1,6 @@
 use core::str;
 use core::str::FromStr as _;
-use hashes::Hasher as _;
+use dupdir_hash::Hasher as _;
 use std::env;
 use std::fs;
 use std::io;
@@ -86,8 +86,8 @@ macro_rules! impl_algorithms {
                     $(
                         #[cfg(feature = "hash-" $ident)]
                         Self::$ident => {
-                            let mut hasher = hashes::$ident::default();
-                            hashes::copy_wide(reader, &mut hasher)?;
+                            let mut hasher = dupdir_hash::$ident::default();
+                            dupdir_hash::copy_wide(reader, &mut hasher)?;
                             let hash = hasher.finish();
                             let hash = hash.to_vec();
                             Ok(hash)

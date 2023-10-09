@@ -1,3 +1,5 @@
+CARGO := cargo --color=always
+
 # Installs post-dev-env dependencies & runs the project.
 .PHONY: all
 all: post-dependencies run
@@ -27,20 +29,22 @@ dev-env:
 post-dependencies:
 	cargo install cargo-watch
 
-# Builds, tests, and runs benchmarks.
+# Checks, tests, and builds project.
 .PHONY: run
 run:
-	cargo run --package utils
+	$(CARGO) check
+	$(CARGO) test
+	$(CARGO) build --release
 
-# Runs the find-files desktop app.
-.PHONY: run-find-files
-run-find-files:
-	(cd packages/find-files-desktop && cargo run --release --package find-files-desktop ~/Desktop/files)
+# Runs benchmarks.
+.PHONY: bench
+bench:
+	cargo bench
 
 # Continually rebuilds the project.
 .PHONY: watch
 watch:
-	cargo watch -x "run --bin utils" -i dupdir/out
+	cargo watch --shell "make run" -i dupdir/out
 
 # Cleans the Rust project & development environment.
 .PHONY: clean
@@ -48,4 +52,4 @@ clean:
 	cargo clean
 	rm -rf \
 		nix/develop* \
-		investigator/benches/random_data
+		dupdir_hash/benches/random_data

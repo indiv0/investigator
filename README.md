@@ -18,29 +18,8 @@ make run
 
 ## DupDir Usage
 
-Usage:
 ```sh
-mkdir -p target/data
-clear && cargo check && RUST_BACKTRACE=1 time cargo run --release old_dup_dirs
-cat target/data/dupdirs_by_path.txt | awk '{ print length, $0 }' | sort -n -s -r | cut -d" " -f2- > tmp.txt
-scp tmp.txt 172.30.194.6:
-ssh 172.30.194.6
-sudo mv tmp.txt /storage/tmp.txt
-sudo su
-cd /storage
-cat tmp.txt | grep -v "'" | grep -v ' \./lap-ca-nik-01\| \./lab-ca-kvm-02' | cut -d' ' -f2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27 | xargs -I{} du -d 0 "{}" | sort -n
-```
-
-Other usage:
-```sh
-mkdir -p target/data
-clear && cargo check && RUST_BACKTRACE=1 time cargo run --release old_dup_dirs
-cat target/data/dupdirs_by_path.txt | cut -d' ' -f2- | xargs -d '\n' du -d0 | sort -n
-```
-
-New usage:
-```sh
-clear && cargo run --package utils
+clear && make run
 find /Users/indiv0/Desktop/files -type f -name '*'$'\r''*'
 find /Users/indiv0/Desktop/files -type f -name '*'$'\r''*' -delete
 find /Users/indiv0/Desktop/files -not -perm -u=r -not -perm -u=w -not -perm -u=x -ls
@@ -55,32 +34,6 @@ time ./target/release/dupdir dup_dirs target/data/dir_hashes.txt > target/data/d
 exit
 cat target/data/dup_dirs.txt | cut -d';' -f2 | xargs -d '\n' du -d0 | sort -n
 ```
-
-# Find Files Usages
-
-```shell
-export PATH=~/.cargo/bin:$PATH
-cargo install sqlx-cli --no-default-features --features rustls,sqlite
-sqlx database create --database-url=sqlite:find-files.db
-#sqlx migrate add --source packages/find-files-core/migrations -r create_inodes_table
-sqlx migrate run --source packages/find-files-core/migrations
-#sqlx database drop --database-url=sqlite:find-files.db
-cargo install cargo-watch
-cargo install dioxus-cli
-~/.cargo/bin/dioxus serve
-~/.cargo/bin/dioxus build --release
-rm -f find-files.db
-make run-find-files
-> find_by_ext tif,tiff,bmp,jpg,jpeg,gif,png
-```
-
-## Links
-
-- [Dioxus - Custom Assets](https://github.com/DioxusLabs/dioxus/blob/c113d96bbe0a952f51652f019f5c313ac5c0257b/examples/custom_assets.rs)
-- [Reddit - Published a Dioxus+TailwindCSS Example](https://old.reddit.com/r/rust/comments/1224elh/published_a_dioxustailwindcss_example_with_up_to/)
-- [Dioxus - Managing State](https://github.com/DioxusLabs/dioxus/blob/35cb6616af3dd85d2370583d2a2e8d575df23d73/docs/guide/src/en/__unused/index.md)
-- [Dioxus - Tests For Hooks](https://github.com/DioxusLabs/dioxus/issues/955#issuecomment-1531639013)
-- [Dioxus - File Explorer Example](https://github.com/DioxusLabs/example-projects/blob/9a59be6f6506a15f868e64b95512dbbd479c9c0c/file-explorer/src/main.rs)
 
 ## Investigator Performance
 

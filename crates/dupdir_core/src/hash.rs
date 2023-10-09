@@ -1,4 +1,4 @@
-use hashes::Hasher as _;
+use dupdir_hash::Hasher as _;
 use indicatif::ParallelProgressIterator as _;
 use rayon::iter::ParallelIterator as _;
 use rayon::iter::IntoParallelIterator as _;
@@ -46,8 +46,8 @@ impl<'a> Hasher<'a> {
 fn hash_path(path: &str) -> String {
     let mut file =
         fs::File::open(path).unwrap_or_else(|_| panic!("Failed to open file: {path:?}"));
-    let mut hasher = hashes::T1ha2::default();
-    hashes::copy_wide(&mut file, &mut hasher).expect("Failed to hash file");
+    let mut hasher = dupdir_hash::T1ha2::default();
+    dupdir_hash::copy_wide(&mut file, &mut hasher).expect("Failed to hash file");
     let hash = hasher.finish().to_vec();
     hex::encode(hash)
 }
