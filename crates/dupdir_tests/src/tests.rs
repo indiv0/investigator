@@ -56,7 +56,7 @@ fn find_walk_dir() -> Vec<String> {
 fn test_dir_hashes_walk_dir_are_identical() {
     let start = Instant::now();
     let mut state = State::load("../../state.json");
-    let walk_dir = dupdir_core::dir_hashes(&mut state, REAL_FIND_PATH);
+    let walk_dir = dupdir_core::dir_hashes(&mut state);
     let end = Instant::now();
     let duration = end - start;
     assert_eq!(walk_dir.len(), 33966);

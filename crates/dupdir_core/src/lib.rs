@@ -31,6 +31,7 @@ pub mod prelude {
     pub(crate) use core::fmt::Debug;
     pub(crate) use core::fmt::Formatter;
     pub(crate) use core::marker::PhantomData;
+    pub(crate) use rayon::prelude::ParallelIterator;
     pub(crate) use std::collections::BTreeMap;
     pub(crate) use std::collections::BTreeSet;
     pub(crate) use std::collections::HashMap;
@@ -55,6 +56,7 @@ pub mod prelude {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[must_use]
 pub struct State {
+    files: Vec<PathBuf>,
     hashes: BTreeMap<PathBuf, String>,
 }
 
@@ -109,13 +111,18 @@ pub fn run_all(
     state: &mut crate::State,
     search_path: &str,
 ) -> Vec<String> {
+    eprintln!("Searching for files...");
     let files = WalkDirFinder::new(search_path);
     let files = files.into_iter();
-    let files = files.map(path_to_string);
     let files = files.collect();
-    hash(state, files);
+    state.files = files;
+    eprintln!("Hashing files...");
+    hash(state);
+    eprintln!("Saving hashes...");
     state.save();
-    let dir_hashes = dir_hashes(state, search_path);
+    eprintln!("Computing directory hashes...");
+    let dir_hashes = dir_hashes(state);
+    eprintln!("Finding duplicate directories...");
     dup_dirs(&dir_hashes)
 }
 
@@ -209,24 +216,21 @@ impl<P> Debug for FinderIter<'_, P> {
 // === hash ===
 // ============
 
-fn hash(state: &mut State, paths: Vec<String>) {
+fn hash(state: &mut State) {
+    let paths = state.files.clone();
     let paths = paths.into_par_iter();
     let paths = paths.progress();
     let hashes = paths.map(|p| {
-        let path = Path::new(&p);
-        match state.hashes.get(path) {
+        match state.hashes.get(&p) {
             Some(hash) => {
                 let hash = hash.as_str();
                 let hash = hash.to_string();
-                let path = p.as_str();
-                let path = PathBuf::from(path);
-                (path, hash)
+                (p, hash)
             },
             None => {
-                let hash = hash_path(&p);
-                let path = p.as_str();
-                let path = PathBuf::from(path);
-                (path, hash)
+                let path = path_to_str(&p);
+                let hash = hash_path(path);
+                (p, hash)
             },
         }
     });
@@ -249,9 +253,8 @@ fn hash_path(path: &str) -> String {
 
 pub fn dir_hashes(
     state: &mut crate::State,
-    path: impl AsRef<Path>,
 ) -> Vec<(String, String)> {
-    let dir_hashes = dir_hashes_walk_dir_inner(state, path);
+    let dir_hashes = dir_hashes_walk_dir_inner(state);
     let dir_hashes = dir_hashes.map(|(hash, directory)| {
         let hash = hex::encode(hash);
         (hash, directory)
@@ -261,41 +264,18 @@ pub fn dir_hashes(
 
 fn dir_hashes_walk_dir_inner(
     state: &mut crate::State,
-    path: impl AsRef<Path>,
-) -> impl Iterator<Item = ([u8; 8], String)> + '_ {
-    let path = path.as_ref();
-    let walkdir = walkdir::WalkDir::new(path);
-    let entries = walkdir.into_iter();
-    let entries = entries.map(|e| e.expect("DirEntry"));
-    // NOTE [NP]: This seemingly redundant collect exists because we can collect all the entries
-    // up-front then process them in-memory. This lets us display a progress bar.
-    let entries = entries.collect::<Vec<_>>();
-    let entries = entries.into_iter();
+) -> impl ParallelIterator<Item = ([u8; 8], String)> + '_ {
+    eprintln!("Mapping file hashes to their ancestors...");
+    let entries = state.files.iter();
     let entries = entries.progress();
-    let mut cur_dir = None;
     let mut files_in_dir = BTreeMap::<_, BTreeSet<&str>>::new();
-    entries.for_each(|e| {
-        let file_type = e.file_type();
-        if !file_type.is_file() {
-            return
-        }
-        let path = e.into_path();
-
+    entries.for_each(|path| {
         let dir = path.parent().expect("Parent");
         let dir = dir.to_path_buf();
-
-        match &cur_dir {
-            Some(cur) if cur != &dir => cur_dir = Some(dir.clone()),
-            None => cur_dir = Some(dir.clone()),
-            Some(_) => {},
-        }
-
-        let h = state.hashes.get(&path).expect("File hash");
-        for ancestor in dir.ancestors() {
-            let ancestor = ancestor.to_str();
-            let ancestor = ancestor.expect("Ancestor");
-            let ancestor = ancestor.to_string();
-            let hashes = files_in_dir.entry(ancestor);
+        let h = state.hashes.get(path).expect("File hash");
+        for a in dir.ancestors() {
+            let a = path_to_string(a);
+            let hashes = files_in_dir.entry(a);
             // Note that we store the files in a `BTreeSet` rather than incrementally hashing
             // because the order in which files appear in the directories (e.g., due to renaming)
             // shouldn't affect the hash.
@@ -304,8 +284,8 @@ fn dir_hashes_walk_dir_inner(
         }
     });
 
-    let dir_hashes = files_in_dir.into_iter();
-    let dir_hashes = dir_hashes.progress();
+    eprintln!("Finalizing directory hashes...");
+    let dir_hashes = files_in_dir.into_par_iter();
     dir_hashes.map(|(d, hashes)| {
         let mut hasher = dupdir_hash::T1ha2::default();
         let hashes = hashes.into_iter();
