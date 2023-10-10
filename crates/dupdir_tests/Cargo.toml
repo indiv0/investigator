@@ -8,6 +8,3 @@ doctest = false
 
 [dependencies]
 dupdir_core.workspace = true
-
-[dev-dependencies]
-dupdir_cli.workspace = true

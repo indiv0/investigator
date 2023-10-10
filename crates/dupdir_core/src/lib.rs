@@ -73,7 +73,7 @@ impl State {
             let json = fs::read_to_string(path).expect("Read");
             serde_json::from_str(&json).expect("Deserialize")
         } else {
-            panic!();
+            Self::default()
         }
     }
 }
@@ -210,32 +210,27 @@ impl<P> Debug for FinderIter<'_, P> {
 // ============
 
 fn hash(state: &mut State, paths: Vec<String>) {
-    let hashes_and_paths = paths.into_par_iter().progress().map(|p| {
+    let paths = paths.into_par_iter();
+    let paths = paths.progress();
+    let hashes = paths.map(|p| {
         let path = Path::new(&p);
         match state.hashes.get(path) {
             Some(hash) => {
                 let hash = hash.as_str();
+                let hash = hash.to_string();
                 let path = p.as_str();
-                format!("{hash}  {path}")
+                let path = PathBuf::from(path);
+                (path, hash)
             },
             None => {
                 let hash = hash_path(&p);
                 let path = p.as_str();
-                format!("{hash}  {path}")
+                let path = PathBuf::from(path);
+                (path, hash)
             },
         }
     });
-    let hashes = hashes_and_paths.collect::<Vec<_>>();
-    let hashes = hashes.clone();
-    let hashes = hashes.into_iter();
-    let hashes = hashes.progress();
-    let hashes = hashes.map(|line| {
-        let line = line.as_str();
-        let (hash, path) = line.split_once("  ").expect("Split once");
-        (PathBuf::from(path), hash.to_string())
-    });
-    let hashes = hashes.collect::<BTreeMap<_, _>>();
-    state.hashes = hashes;
+    state.hashes = hashes.collect();
 }
 
 fn hash_path(path: &str) -> String {
