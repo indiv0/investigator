@@ -1,4 +1,5 @@
 use crate::find;
+use std::time;
 
 // =================
 // === Constants ===
@@ -11,7 +12,14 @@ const REAL_FIND_PATH: &str = "/Users/indiv0/Desktop/files";
 // ============
 
 #[test]
-fn test_unix_and_walkdir_are_identical() {
+#[ignore]
+fn test_unix_and_walk_dir_are_identical() {
+    let unix = find_unix();
+    let walk_dir = find_walk_dir();
+    assert_eq!(unix, walk_dir);
+}
+
+fn find_unix() -> Vec<String> {
     let unix = find::UnixFinder::new(REAL_FIND_PATH);
     let unix = unix.into_iter();
     let unix = unix.map(|p| {
@@ -19,7 +27,10 @@ fn test_unix_and_walkdir_are_identical() {
         let s = crate::path_to_str(p);
         s.to_string()
     });
-    let unix = unix.collect::<Vec<_>>();
+    unix.collect()
+}
+
+fn find_walk_dir() -> Vec<String> {
     let walk_dir = find::WalkDirFinder::new(REAL_FIND_PATH);
     let walk_dir = walk_dir.into_iter();
     let walk_dir = walk_dir.map(|p| {
@@ -27,6 +38,22 @@ fn test_unix_and_walkdir_are_identical() {
         let s = crate::path_to_str(p);
         s.to_string()
     });
-    let walk_dir = walk_dir.collect::<Vec<_>>();
-    assert_eq!(unix, walk_dir);
+    walk_dir.collect()
+}
+
+
+
+// =================
+// === DirHashes ===
+// =================
+
+#[test]
+fn test_dir_hashes_walk_dir_are_identical() {
+    let start = time::Instant::now();
+    let mut state = crate::State::load("../../state.json");
+    let walk_dir = crate::run_dir_hashes(&mut state, REAL_FIND_PATH);
+    let end = time::Instant::now();
+    let duration = end - start;
+    assert_eq!(walk_dir.len(), 33966);
+    println!("WalkDir: {:?}", duration);
 }

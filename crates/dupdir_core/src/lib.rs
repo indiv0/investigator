@@ -1,6 +1,5 @@
 use crate::prelude::*;
 
-use dupdir_hash::Hasher as _;
 use std::fs;
 use std::io;
 use std::io::BufRead as _;
@@ -10,14 +9,12 @@ use std::str;
 // === Constants ===
 // =================
 
-const UNIQUE_SEPARATOR: &str = "    ";
-const STATE_JSON: &str = "state.json";
+pub const STATE_JSON: &str = "state.json";
 
 // ==============
 // === Export ===
 // ==============
 
-mod dir_files;
 mod dir_hashes;
 mod dup_dirs;
 pub mod find;
@@ -25,7 +22,6 @@ mod hash;
 #[cfg(test)]
 mod tests;
 
-pub use dir_files::main as run_dir_files;
 pub use dir_hashes::main as run_dir_hashes;
 pub use dup_dirs::main as run_dup_dirs;
 pub use hash::main as run_hash;
@@ -65,13 +61,13 @@ impl State {
         fs::write(path, json).expect("Write");
     }
 
-    pub fn load() -> Self {
-        let path = Path::new(STATE_JSON);
+    pub fn load(path: impl AsRef<Path>) -> Self {
+        let path = path.as_ref();
         if path.exists() {
             let json = fs::read_to_string(path).expect("Read");
             serde_json::from_str(&json).expect("Deserialize")
         } else {
-            Self::default()
+            panic!();
         }
     }
 }
@@ -82,7 +78,7 @@ impl State {
 // === Lines ===
 // =============
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Eq, PartialEq)]
 pub struct Lines(pub Vec<String>);
 
 // === Main `impl` ===
@@ -121,13 +117,6 @@ impl TryFrom<&Path> for Lines {
         let paths = Self(paths);
         Ok(paths)
     }
-}
-
-fn hash_bytes(bytes: &[u8]) -> String {
-    let mut hasher = dupdir_hash::T1ha2::default();
-    dupdir_hash::copy_wide(&mut &bytes[..], &mut hasher).unwrap();
-    let hash = hasher.finish().to_vec();
-    hex::encode(hash)
 }
 
 #[inline]

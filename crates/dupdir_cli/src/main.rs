@@ -14,7 +14,6 @@ use std::io;
 enum Command {
     Find,
     Hash,
-    DirFiles,
     DirHashes,
     DupDirs,
     All,
@@ -29,7 +28,6 @@ impl str::FromStr for Command {
         let command = match s {
             "find" => Self::Find,
             "hash" => Self::Hash,
-            "dir_files" => Self::DirFiles,
             "dir_hashes" => Self::DirHashes,
             "dup_dirs" => Self::DupDirs,
             "all" => Self::All,
@@ -49,7 +47,7 @@ fn main() {
         let _command = args.next();
         let command = args.next().expect("Command required");
         let command = Command::from_str(&command)?;
-        let mut state = dupdir_core::State::load();
+        let mut state = dupdir_core::State::load(dupdir_core::STATE_JSON);
         match command {
             Command::Find => {
                 let path = path_arg(&mut args)?;
@@ -74,24 +72,12 @@ fn main() {
                 dupdir_core::run_hash(&mut state, &paths);
                 state.save();
             }
-            Command::DirFiles => {
-                let path = path_arg(&mut args)?;
-                let files = dupdir_core::Lines::from_path(path)?;
-                let lines = dupdir_core::run_dir_files(&files);
-
-                // Write the resulting strings to stdout.
-                let mut writer = stdout_writer();
-                let dupdir_core::Lines(lines) = lines;
-                write_output(&mut writer, lines)?;
-            }
             Command::DirHashes => {
-                let dir_files = path_arg(&mut args)?;
-                let dir_files = dupdir_core::Lines::from_path(dir_files)?;
-                let lines = dupdir_core::run_dir_hashes(&mut state, &dir_files);
+                let path = path_arg(&mut args)?;
+                let lines = dupdir_core::run_dir_hashes(&mut state, path);
 
                 // Write the resulting strings to stdout.
                 let mut writer = stdout_writer();
-                let dupdir_core::Lines(lines) = lines;
                 write_output(&mut writer, lines)?;
             }
             Command::DupDirs => {
@@ -117,8 +103,8 @@ fn main() {
                 let files = dupdir_core::Lines(files);
                 dupdir_core::run_hash(&mut state, &files);
                 state.save();
-                let dir_files = dupdir_core::run_dir_files(&files);
-                let dir_hashes = dupdir_core::run_dir_hashes(&mut state, &dir_files);
+                let dir_hashes = dupdir_core::run_dir_hashes(&mut state, &search_path);
+                let dir_hashes = dupdir_core::Lines(dir_hashes);
                 let lines = dupdir_core::run_dup_dirs(&dir_hashes);
 
                 // Write the resulting strings to stdout.
