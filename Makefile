@@ -49,7 +49,7 @@ bench:
 # Continually rebuilds the project.
 .PHONY: watch
 watch:
-	cargo watch --shell "make run" -i crates/state.json
+	cargo watch --shell "make run" -i crates/state.json -i crates/dupdir_tests/state.json
 
 # Cleans the Rust project & development environment.
 .PHONY: clean

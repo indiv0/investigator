@@ -415,6 +415,7 @@ name = "dupdir_tests"
 version = "0.1.0"
 dependencies = [
  "dupdir_cli",
+ "dupdir_core",
 ]
 
 [[package]]

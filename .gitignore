@@ -1,6 +1,6 @@
 # hashes
 /crates/dupdir_hash/benches/hello_world
-/crates/dupdir_tests/out
+/crates/dupdir_tests/state.json
 /crates/state.json
 /state.json
 
