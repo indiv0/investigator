@@ -23,12 +23,12 @@ pub fn main(
 fn dir_hashes_walk_dir_inner(
     state: &mut crate::State,
     path: impl AsRef<Path>,
-) -> impl Iterator<Item = (String, [u8; 8])> {
+) -> impl Iterator<Item = (String, [u8; 8])> + '_ {
     let path = path.as_ref();
     let walkdir = walkdir::WalkDir::new(path);
     let entries = walkdir.into_iter();
     let mut cur_dir = None;
-    let mut files_in_dir = BTreeMap::<_, dupdir_hash::T1ha2>::new();
+    let mut files_in_dir = BTreeMap::<_, BTreeSet<&str>>::new();
     entries.for_each(|e| {
         let e = e.expect("DirEntry");
         let file_type = e.file_type();
@@ -51,17 +51,25 @@ fn dir_hashes_walk_dir_inner(
             let ancestor = ancestor.to_str();
             let ancestor = ancestor.expect("Ancestor");
             let ancestor = ancestor.to_string();
-            let hasher = files_in_dir.entry(ancestor);
-            let hasher = hasher.or_insert_with(dupdir_hash::T1ha2::default);
-            // FIXME [NP]: Is this correct? It'll register directories w/ different amounts of
-            // copies of the same file as identical.
-            dupdir_hash::copy_wide(&mut &h.as_bytes()[..], hasher).unwrap();
+            let hashes = files_in_dir.entry(ancestor);
+            // Note that we store the files in a `BTreeSet` rather than incrementally hashing
+            // because the order in which files appear in the directories (e.g., due to renaming)
+            // shouldn't affect the hash.
+            let hashes = hashes.or_insert_with(BTreeSet::new);
+            hashes.insert(h);
         }
     });
 
     let dir_hashes = files_in_dir.into_iter();
-    dir_hashes.map(|(d, h)| {
-        let hash = h.finish();
+    dir_hashes.map(|(d, hashes)| {
+        let mut hasher = dupdir_hash::T1ha2::default();
+        let hashes = hashes.into_iter();
+        hashes.for_each(|h| {
+            // FIXME [NP]: Is this correct? It'll register directories w/ different amounts of
+            // copies of the same file as identical.
+            dupdir_hash::copy_wide(&mut &h.as_bytes()[..], &mut hasher).unwrap();
+        });
+        let hash = hasher.finish();
         (d, hash)
     })
 }

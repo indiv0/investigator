@@ -36,6 +36,7 @@ mod prelude {
     pub(crate) use serde::Deserialize;
     pub(crate) use serde::Serialize;
     pub(crate) use std::collections::BTreeMap;
+    pub(crate) use std::collections::BTreeSet;
     pub(crate) use std::path::Path;
     pub(crate) use std::path::PathBuf;
 }
