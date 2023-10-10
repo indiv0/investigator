@@ -266,13 +266,12 @@ fn dir_hashes_walk_dir_inner(
     state: &mut crate::State,
 ) -> impl ParallelIterator<Item = ([u8; 8], String)> + '_ {
     eprintln!("Mapping file hashes to their ancestors...");
-    let entries = state.files.iter();
+    let entries = state.hashes.iter();
     let entries = entries.progress();
     let mut files_in_dir = BTreeMap::<_, BTreeSet<&str>>::new();
-    entries.for_each(|path| {
-        let dir = path.parent().expect("Parent");
+    entries.for_each(|(p, h)| {
+        let dir = p.parent().expect("Parent");
         let dir = dir.to_path_buf();
-        let h = state.hashes.get(path).expect("File hash");
         for a in dir.ancestors() {
             let a = path_to_string(a);
             let hashes = files_in_dir.entry(a);
