@@ -3,9 +3,13 @@ use crate::prelude::*;
 use core::fmt;
 use dupdir_hash::Hasher as _;
 use indicatif::ProgressIterator as _;
+#[cfg(feature = "rayon")]
 use indicatif::ParallelProgressIterator as _;
+#[cfg(feature = "rayon")]
 use rayon::iter::IntoParallelIterator as _;
+#[cfg(feature = "rayon")]
 use rayon::iter::IntoParallelRefIterator as _;
+#[cfg(feature = "rayon")]
 use rayon::iter::ParallelIterator as _;
 use std::fs;
 use std::str;
@@ -31,7 +35,6 @@ pub mod prelude {
     pub(crate) use core::fmt::Debug;
     pub(crate) use core::fmt::Formatter;
     pub(crate) use core::marker::PhantomData;
-    pub(crate) use rayon::prelude::ParallelIterator;
     pub(crate) use std::collections::BTreeMap;
     pub(crate) use std::collections::BTreeSet;
     pub(crate) use std::collections::HashMap;
@@ -218,7 +221,10 @@ impl<P> Debug for FinderIter<'_, P> {
 
 fn hash(state: &mut State) {
     let paths = state.files.clone();
+    #[cfg(feature = "rayon")]
     let paths = paths.into_par_iter();
+    #[cfg(not(feature = "rayon"))]
+    let paths = paths.into_iter();
     let paths = paths.progress();
     let hashes = paths.map(|p| {
         match state.hashes.get(&p) {
@@ -253,27 +259,14 @@ fn hash_path(path: &str) -> String {
 
 pub fn dir_hashes(
     state: &mut crate::State,
-) -> Vec<(String, String)> {
-    let dir_hashes = dir_hashes_walk_dir_inner(state);
-    let dir_hashes = dir_hashes.map(|(hash, directory)| {
-        let hash = hex::encode(hash);
-        (hash, directory)
-    });
-    dir_hashes.collect()
-}
-
-fn dir_hashes_walk_dir_inner(
-    state: &mut crate::State,
-) -> impl ParallelIterator<Item = ([u8; 8], String)> + '_ {
+) -> Vec<(String, &Path)> {
     eprintln!("Mapping file hashes to their ancestors...");
     let entries = state.hashes.iter();
     let entries = entries.progress();
     let mut files_in_dir = BTreeMap::<_, BTreeSet<&str>>::new();
     entries.for_each(|(p, h)| {
         let dir = p.parent().expect("Parent");
-        let dir = dir.to_path_buf();
         for a in dir.ancestors() {
-            let a = path_to_string(a);
             let hashes = files_in_dir.entry(a);
             // Note that we store the files in a `BTreeSet` rather than incrementally hashing
             // because the order in which files appear in the directories (e.g., due to renaming)
@@ -284,8 +277,11 @@ fn dir_hashes_walk_dir_inner(
     });
 
     eprintln!("Finalizing directory hashes...");
-    let dir_hashes = files_in_dir.into_par_iter();
-    dir_hashes.map(|(d, hashes)| {
+    #[cfg(feature = "rayon")]
+    let files_in_dir = files_in_dir.into_par_iter();
+    #[cfg(not(feature = "rayon"))]
+    let files_in_dir = files_in_dir.into_iter();
+    let dir_hashes = files_in_dir.map(|(d, hashes)| {
         let mut hasher = dupdir_hash::T1ha2::default();
         let hashes = hashes.into_iter();
         hashes.for_each(|h| {
@@ -295,7 +291,13 @@ fn dir_hashes_walk_dir_inner(
         });
         let hash = hasher.finish();
         (hash, d)
-    })
+    });
+
+    let dir_hashes = dir_hashes.map(|(hash, directory)| {
+        let hash = hex::encode(hash);
+        (hash, directory)
+    });
+    dir_hashes.collect()
 }
 
 
@@ -304,12 +306,15 @@ fn dir_hashes_walk_dir_inner(
 // === dup_dirs ===
 // ================
 
-fn dup_dirs(dir_hashes: &[(String, String)]) -> Vec<String> {
+fn dup_dirs(dir_hashes: &[(String, &Path)]) -> Vec<String> {
     // Read the mapping of hash -> dir
     eprintln!("Reading (hash -> dir) mapping");
     let dir_hashes = dir_hashes.iter();
     let dir_hashes = dir_hashes.progress();
-    let dir_hashes = dir_hashes.map(|(h, d)| (h.as_str(), d.as_str()));
+    let dir_hashes = dir_hashes.map(|(h, d)| {
+        let d = path_to_string(d);
+        (h.as_str(), d)
+    });
     // FIXME [NP]: Remove this collect
     let dir_hashes = dir_hashes.collect::<Vec<_>>();
 
@@ -371,18 +376,31 @@ fn dup_dirs(dir_hashes: &[(String, String)]) -> Vec<String> {
         .collect::<Vec<_>>();
 
     // Sort the mapping by dir name.
-    dup_dirs.sort_by_key(|(_, d)| *d);
+    sort_by_key_ref(&mut dup_dirs, |(_, d)| d.as_str());
 
     // Turn this into a list of strings.
     eprintln!("Convert vec<(hash, dir)> to vec<str>");
-    let dup_dirs = dup_dirs
-        .par_iter()
+    #[cfg(feature = "rayon")]
+    let dup_dirs = dup_dirs.par_iter();
+    #[cfg(not(feature = "rayon"))]
+    let dup_dirs = dup_dirs.iter();
+    dup_dirs
         .progress()
         .inspect(|(h, d)| {
             assert!(!h.contains(UNIQUE_SEPARATOR));
             assert!(!d.contains(UNIQUE_SEPARATOR));
         })
-        .map(|(h, d)| [*h, *d].join(UNIQUE_SEPARATOR))
-        .collect::<Vec<_>>();
-    dup_dirs
+        .map(|(h, d)| [*h, d].join(UNIQUE_SEPARATOR))
+        .collect::<Vec<_>>()
+}
+
+// NOTE [NP]: `Vec::sort_by_key` doesn't work when the key is a `String` (since we can't return
+// references from closures without GATs). This is a workaround for that.
+// See: https://stackoverflow.com/a/47127500
+fn sort_by_key_ref<T, F, K>(a: &mut [T], key: F)
+where
+    F: Fn(&T) -> &K,
+    K: ?Sized + Ord,
+{
+    a.sort_by(|x, y| key(x).cmp(key(y)));
 }

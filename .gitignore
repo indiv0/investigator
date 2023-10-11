@@ -7,6 +7,9 @@
 # rust/cargo
 /target
 
+# cargo-flamegraph
+/flamegraph.svg
+
 # created by rust-analyzer extension of vscode
 /rust-analyzer-target
 /crates/dupdir/rust-analyzer-target

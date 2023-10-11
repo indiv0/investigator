@@ -51,6 +51,12 @@ bench:
 watch:
 	cargo watch --shell "make run" -i crates/state.json -i crates/dupdir_tests/state.json
 
+# Runs the `dupdir_cli all` command with `cargo-flamegraph` profiling.
+.PHONY: flamegraph
+flamegraph:
+	cargo flamegraph --dev --root --bin dupdir_cli -- \
+		all /Users/indiv0/Desktop/files > target/data/dup_dirs.txt
+
 # Cleans the Rust project & development environment.
 .PHONY: clean
 clean:
